@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import { HardDrive, RefreshCw, ExternalLink } from 'lucide-react';
 import { Sidebar, NavTab } from './components/Sidebar';
 import { TopBar } from './components/TopBar';
@@ -1159,6 +1160,7 @@ export default function App() {
           </div>
         </div>
       )}
+      <Analytics />
     </div>
   );
 }
