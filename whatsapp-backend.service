@@ -1,0 +1,19 @@
+[Unit]
+Description=WhatsApp Production Backend Worker Service
+After=network.target whatsapp-orphan-cleanup.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/app
+ExecStart=/usr/bin/npm run dev
+Restart=always
+RestartSec=3s
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=NODE_OPTIONS=--max-old-space-size=512
+LimitNOFILE=65536
+MemoryMax=512M
+
+[Install]
+WantedBy=multi-user.target

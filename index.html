@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="referrer" content="no-referrer" />
+    <script>
+      (function() {
+        try {
+          var _nativeFetch = window.fetch;
+          var defineFetchProperty = function(target) {
+            try {
+              Object.defineProperty(target, 'fetch', {
+                get: function() {
+                  return _nativeFetch;
+                },
+                set: function(val) {
+                  _nativeFetch = val;
+                },
+                configurable: true,
+                enumerable: true
+              });
+            } catch (_) {}
+          };
+          defineFetchProperty(window);
+          if (typeof Window !== 'undefined' && Window.prototype) {
+            defineFetchProperty(Window.prototype);
+          }
+        } catch (e) {
+          console.warn('Window.fetch setup:', e);
+        }
+      })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Remix Mujahid Digital Zone WhatsApp Bot & Moderation Console</title>
+    <meta name="description" content="Production-grade WhatsApp group moderation bot and 24/7 operations control panel with live QR and pairing code, anti-link defense, warning rules, member identity resolution, and reputation tracking." />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2325D366'/%3E%3Ctext x='32' y='40' font-family='Arial' font-weight='bold' font-size='22' fill='%23ffffff' text-anchor='middle'%3EMDZ%3C/text%3E%3C/svg%3E" />
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2325D366'/%3E%3Ctext x='32' y='40' font-family='Arial' font-weight='bold' font-size='22' fill='%23ffffff' text-anchor='middle'%3EMDZ%3C/text%3E%3C/svg%3E" />
+    <meta property="og:title" content="Remix Mujahid Digital Zone WhatsApp Bot & Moderation Console" />
+    <meta property="og:description" content="Production-grade WhatsApp group moderation bot and 24/7 operations control panel with live QR and pairing code, anti-link defense, warning rules, member identity resolution, and reputation tracking." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  </head>
+  <body class="bg-slate-950 text-slate-100 antialiased selection:bg-emerald-500/20 selection:text-emerald-300">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,22 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+
+# WhatsApp Session Keys & Sensitive Persistent Stores
+data/session/
+data/auto_sender_session/
+data/whatsapp_center_session/
+data/customer_sessions/
+data/customer_sessions_backup/
+data/customer_stores/
+data/rollbacks/
+data/uploads/
+data/*.json
+data-protection/
+Mujahid_Digital_Zone_Backups/
+

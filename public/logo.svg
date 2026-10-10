@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="bgGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#051535" />
+      <stop offset="100%" stop-color="#020817" />
+    </radialGradient>
+    <linearGradient id="neonGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f2fe" />
+      <stop offset="100%" stop-color="#4facfe" />
+    </linearGradient>
+    <linearGradient id="mascotBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563eb" />
+      <stop offset="100%" stop-color="#1d4ed8" />
+    </linearGradient>
+    <linearGradient id="redScarf" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ef4444" />
+      <stop offset="100%" stop-color="#b91c1c" />
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="100" fill="url(#bgGrad)" />
+  <circle cx="256" cy="240" r="210" fill="none" stroke="url(#neonGlow)" stroke-width="12" filter="drop-shadow(0 0 16px rgba(0,242,254,0.8))" />
+
+  <g transform="translate(0, 15)">
+    <rect x="176" y="110" width="160" height="180" rx="80" fill="url(#mascotBlue)" />
+    <ellipse cx="256" cy="210" rx="65" ry="55" fill="#dbeafe" opacity="0.9" />
+
+    <circle cx="230" cy="195" r="10" fill="#0f172a" />
+    <circle cx="282" cy="195" r="10" fill="#0f172a" />
+    <circle cx="227" cy="192" r="3" fill="#ffffff" />
+    <circle cx="279" cy="192" r="3" fill="#ffffff" />
+
+    <path d="M 242 220 Q 256 232 270 220" stroke="#0f172a" stroke-width="4" fill="none" stroke-linecap="round" />
+
+    <ellipse cx="160" cy="240" rx="25" ry="45" fill="url(#mascotBlue)" transform="rotate(15 160 240)" />
+    <ellipse cx="352" cy="240" rx="25" ry="45" fill="url(#mascotBlue)" transform="rotate(-15 352 240)" />
+
+    <ellipse cx="216" cy="310" rx="30" ry="20" fill="url(#mascotBlue)" />
+    <ellipse cx="296" cy="310" rx="30" ry="20" fill="url(#mascotBlue)" />
+
+    <path d="M 180 230 Q 256 250 332 230 L 340 260 Q 256 280 172 260 Z" fill="url(#redScarf)" />
+    <path d="M 280 250 L 310 320 Q 300 330 280 320 Z" fill="url(#redScarf)" />
+    
+    <rect x="285" y="275" width="22" height="22" rx="4" fill="#ffffff" />
+    <text x="296" y="291" font-family="Arial, sans-serif" font-weight="900" font-size="14" fill="#b91c1c" text-anchor="middle">M</text>
+  </g>
+
+  <text x="256" y="420" font-family="Arial, sans-serif" font-weight="900" font-size="34" fill="#ffffff" text-anchor="middle" letter-spacing="2" filter="drop-shadow(0 0 8px rgba(0,242,254,0.6))">MUJAHID</text>
+  <text x="256" y="450" font-family="Arial, sans-serif" font-weight="700" font-size="16" fill="#38bdf8" text-anchor="middle" letter-spacing="4">DIGITAL ZONE</text>
+  <text x="256" y="475" font-family="Arial, sans-serif" font-weight="600" font-size="10" fill="#94a3b8" text-anchor="middle" letter-spacing="2">DIGITAL TOOLS • PREMIUM SERVICES</text>
+</svg>

@@ -1,0 +1,8 @@
+{
+  "name": "Remix Mujahid Digital Zone WhatsApp Bot \u0026 Moderation Console",
+  "description": "Production-grade WhatsApp group moderation bot and 24/7 operations control panel with live QR and pairing code, anti-link defense, warning rules, member identity resolution, and reputation tracking.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
