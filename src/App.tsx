@@ -195,7 +195,11 @@ export default function App() {
   const [isActivatingCust, setIsActivatingCust] = useState<boolean>(false);
   const [isAppInitializing, setIsAppInitializing] = useState<boolean>(true);
 
-  const custId = custToken ? 'lic_' + custToken.toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_') : 'default_customer';
+  useEffect(() => {
+    import('@vercel/analytics').then(m => {
+      if (m && typeof m.inject === 'function') m.inject();
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!isCustomerMode || !custToken) {
