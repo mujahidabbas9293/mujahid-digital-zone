@@ -45,21 +45,22 @@ export const TopBar: React.FC<TopBarProps> = ({
   onLogoutLicense,
   onToggleMobileMenu
 }) => {
-  const connection = status?.status || 'DISCONNECTED';
-  const workerState = status?.workerStatus || 'STOPPED';
-  const isConnected = connection === 'CONNECTED';
-  const isRecovering = connection === 'CONNECTING' || workerState === 'RECOVERING';
+  const [showServerModal, setShowServerModal] = React.useState(false);
+  const [customServerUrl, setCustomServerUrl] = React.useState<string>(() => {
+    return localStorage.getItem('mdz_custom_backend_url') || import.meta.env.VITE_API_URL || '';
+  });
 
-  const uptimeSeconds = status?.uptimeSeconds || 0;
-  const days = Math.floor(uptimeSeconds / (3600 * 24));
-  const hours = Math.floor((uptimeSeconds % (3600 * 24)) / 3600);
-  const minutes = Math.floor((uptimeSeconds % 3600) / 60);
-
-  const profile = status?.profile;
-
-  const isMasterAdmin = !resellerStatus || resellerStatus.is_master_admin;
-  const isLicenseActive = resellerStatus && resellerStatus.is_active_license;
-  const showWhatsAppCenter = isMasterAdmin || Boolean(resellerStatus?.has_whatsapp_center);
+  const handleSaveServerUrl = (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanUrl = customServerUrl.trim().replace(/\/$/, '');
+    if (cleanUrl) {
+      localStorage.setItem('mdz_custom_backend_url', cleanUrl);
+    } else {
+      localStorage.removeItem('mdz_custom_backend_url');
+    }
+    setShowServerModal(false);
+    window.location.reload();
+  };
 
   return (
     <header className="h-16 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-20">
@@ -111,6 +112,16 @@ export const TopBar: React.FC<TopBarProps> = ({
               : 'DISCONNECTED'}
           </span>
         </div>
+
+        {/* Cloud Server URL Switcher Button */}
+        <button
+          onClick={() => setShowServerModal(true)}
+          className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 transition-all"
+          title="Configure Cloud Backend Server URL for Vercel"
+        >
+          <Server className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Server URL</span>
+        </button>
 
         {/* Real Profile Display */}
         {(isConnected || isRecovering) && (profile || status?.botPhone) && (
@@ -233,6 +244,62 @@ export const TopBar: React.FC<TopBarProps> = ({
           </button>
         )}
       </div>
+
+      {/* Cloud Server URL Modal */}
+      {showServerModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div className="flex items-center space-x-2">
+                <Server className="w-5 h-5 text-emerald-400" />
+                <h3 className="text-base font-bold text-white">Backend Cloud Server URL</h3>
+              </div>
+              <button onClick={() => setShowServerModal(false)} className="text-slate-400 hover:text-white font-bold">✕</button>
+            </div>
+            
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Enter your backend server URL (e.g., Render, Railway, or Cloud VPS IP). Vercel website will connect directly to this server for live QR, Pairing Code, and Auto-Sender.
+            </p>
+
+            <form onSubmit={handleSaveServerUrl} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1">Server API URL</label>
+                <input
+                  type="url"
+                  value={customServerUrl}
+                  onChange={e => setCustomServerUrl(e.target.value)}
+                  placeholder="https://mujahid-digital-zone.onrender.com"
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-mono"
+                />
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Example: <span className="text-emerald-400 font-mono">https://mujahid-digital-zone.onrender.com</span> or <span className="text-indigo-400 font-mono">http://YOUR-VPS-IP:3000</span>
+                </p>
+              </div>
+
+              <div className="flex items-center justify-end space-x-2 pt-2 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => {
+                    localStorage.removeItem('mdz_custom_backend_url');
+                    setCustomServerUrl('');
+                    setShowServerModal(false);
+                    window.location.reload();
+                  }}
+                  className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-xl transition-colors"
+                >
+                  Reset Default
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition-all shadow-md"
+                >
+                  Save & Connect Server
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </header>
   );
 };
