@@ -45,6 +45,19 @@ export const TopBar: React.FC<TopBarProps> = ({
   onLogoutLicense,
   onToggleMobileMenu
 }) => {
+  const connection = status?.status || 'DISCONNECTED';
+  const workerState = status?.workerStatus || 'STOPPED';
+  const isConnected = connection === 'CONNECTED';
+  const isRecovering = connection === 'CONNECTING' || workerState === 'RECOVERING';
+  const uptimeSeconds = status?.uptimeSeconds || 0;
+  const days = Math.floor(uptimeSeconds / (3600 * 24));
+  const hours = Math.floor((uptimeSeconds % (3600 * 24)) / 3600);
+  const minutes = Math.floor((uptimeSeconds % 3600) / 60);
+  const profile = status?.profile;
+  const isMasterAdmin = !resellerStatus || resellerStatus.is_master_admin;
+  const isLicenseActive = resellerStatus && resellerStatus.is_active_license;
+  const showWhatsAppCenter = isMasterAdmin || Boolean(resellerStatus?.has_whatsapp_center);
+
   const [showServerModal, setShowServerModal] = React.useState(false);
   const [customServerUrl, setCustomServerUrl] = React.useState<string>(() => {
     return localStorage.getItem('mdz_custom_backend_url') || import.meta.env.VITE_API_URL || '';
