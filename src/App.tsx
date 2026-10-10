@@ -195,6 +195,8 @@ export default function App() {
   const [isActivatingCust, setIsActivatingCust] = useState<boolean>(false);
   const [isAppInitializing, setIsAppInitializing] = useState<boolean>(false);
 
+  const custId = custToken ? 'lic_' + custToken.toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_') : 'default_customer';
+
   useEffect(() => {
     const safetyTimer = setTimeout(() => setIsAppInitializing(false), 1500);
     import('@vercel/analytics').then(m => {
