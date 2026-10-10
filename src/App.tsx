@@ -193,12 +193,14 @@ export default function App() {
   const [custLicError, setCustLicError] = useState<string | null>(null);
   const [activationInput, setActivationInput] = useState<string>('');
   const [isActivatingCust, setIsActivatingCust] = useState<boolean>(false);
-  const [isAppInitializing, setIsAppInitializing] = useState<boolean>(true);
+  const [isAppInitializing, setIsAppInitializing] = useState<boolean>(false);
 
   useEffect(() => {
+    const safetyTimer = setTimeout(() => setIsAppInitializing(false), 1500);
     import('@vercel/analytics').then(m => {
       if (m && typeof m.inject === 'function') m.inject();
     }).catch(() => {});
+    return () => clearTimeout(safetyTimer);
   }, []);
 
   useEffect(() => {
