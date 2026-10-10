@@ -432,11 +432,17 @@ export const WhatsAppCenterView: React.FC<WhatsAppCenterViewProps> = ({
     if (!clean) return;
     setRequestingPairing(true);
     try {
-      await apiFetch('/api/whatsapp-center/pairing-code', {
+      const res = await apiFetch('/api/whatsapp-center/pairing-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber: clean })
+        body: JSON.stringify({ phoneNumber: clean, phone: clean })
       });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        alert(data?.error || 'Failed to generate pairing code');
+      } else if (data?.pairingCode) {
+        setStatus(prev => prev ? { ...prev, pairingCode: data.pairingCode } : prev);
+      }
       fetchData();
     } catch (err) {
       console.error('Failed to request pairing code:', err);

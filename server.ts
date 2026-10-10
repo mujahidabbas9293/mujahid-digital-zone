@@ -4805,16 +4805,33 @@ async function startServer() {
 
   const handleCustomerPairingCode = async (req: Request, res: Response) => {
     const customerId = getCustomerIdFromRequest(req);
-    const { phoneNumber } = req.body;
-    if (!phoneNumber) return res.status(400).json({ error: 'Phone number is required' });
+    const { phoneNumber, phone } = req.body || {};
+    const targetPhone = phoneNumber || phone;
+    if (!targetPhone) return res.status(400).json({ success: false, error: 'Phone number is required' });
     if (isCustomerAuthenticated(customerId)) {
       return res.status(400).json({ success: false, error: 'WhatsApp is already connected for this session. Please unlink first to request pairing.' });
     }
     const session = getOrCreateCustomerSession(customerId);
     session.manualUnlink = false;
     session.store.manualUnlink = false;
-    await initCustomerBaileys(customerId, true, phoneNumber);
-    return res.json({ success: true, message: 'Pairing requested' });
+    await initCustomerBaileys(customerId, true, targetPhone);
+
+    // Wait up to 3.5 seconds for Baileys to produce the 8-digit pairing code
+    let pairingCode = session.pairingCode || null;
+    for (let i = 0; i < 7; i++) {
+      if (session.pairingCode) {
+        pairingCode = session.pairingCode;
+        break;
+      }
+      await new Promise(r => setTimeout(r, 500));
+    }
+
+    return res.json({
+      success: true,
+      pairingCode: pairingCode,
+      code: pairingCode,
+      message: pairingCode ? `Pairing code generated: ${pairingCode}` : 'Pairing requested'
+    });
   };
 
   const handleCustomerRefreshQr = async (req: Request, res: Response) => {
@@ -8037,6 +8054,12 @@ async function startServer() {
   app.post('/api/whatsapp-center/pairing-code', handleCustomerPairingCode);
   app.post('/api/whatsapp-center/refresh-qr', handleCustomerRefreshQr);
   app.post('/api/whatsapp-center/unlink', handleCustomerUnlink);
+
+  app.get('/api/auto-sender/status', handleCustomerStatus);
+  app.post('/api/auto-sender/connect', handleCustomerConnect);
+  app.post('/api/auto-sender/pairing-code', handleCustomerPairingCode);
+  app.post('/api/auto-sender/refresh-qr', handleCustomerRefreshQr);
+  app.post('/api/auto-sender/unlink', handleCustomerUnlink);
 
   app.get('/api/whatsapp-center/groups', (req, res) => {
     const customerId = getCustomerIdFromRequest(req);

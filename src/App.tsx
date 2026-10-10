@@ -511,12 +511,18 @@ export default function App() {
       if (activeLicenseKey) {
         headers['X-License-Key'] = activeLicenseKey;
       }
-      await fetch('/api/connector/pairing-code', {
+      const res = await fetch('/api/connector/pairing-code', {
         method: 'POST',
         headers,
-        body: JSON.stringify({ phoneNumber: phone })
+        body: JSON.stringify({ phoneNumber: phone, phone })
       });
+      const data = await res.json().catch(() => null);
+      if (data?.pairingCode) {
+        setStatus(prev => prev ? { ...prev, pairingCode: data.pairingCode } : prev);
+      }
       await fetchData();
+    } catch (err) {
+      console.error('Failed to request pairing code:', err);
     } finally {
       setIsPairingLoading(false);
     }

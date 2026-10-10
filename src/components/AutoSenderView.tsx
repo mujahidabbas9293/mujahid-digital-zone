@@ -977,14 +977,15 @@ export const AutoSenderView: React.FC = () => {
       const res = await apiFetch('/api/auto-sender/pairing-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: pairingPhone.trim() })
+        body: JSON.stringify({ phone: pairingPhone.trim(), phoneNumber: pairingPhone.trim() })
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
       if (!res.ok) {
-        setPairingError(data.error || 'Failed to generate WhatsApp pairing code.');
+        setPairingError(data?.error || 'Failed to generate WhatsApp pairing code.');
       } else {
         await fetchStatusAndData(false);
-        showNotification('success', 'Pairing code generated. Check WhatsApp on your phone.');
+        const codeMsg = data?.pairingCode || data?.code ? `Pairing Code: ${data.pairingCode || data.code}` : 'Pairing code generated. Check WhatsApp on your phone.';
+        showNotification('success', codeMsg);
       }
     } catch (err: any) {
       setPairingError(err.message || 'Network error requesting pairing code.');
