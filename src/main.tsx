@@ -88,13 +88,13 @@ if (typeof window !== 'undefined') {
 
       if (urlStr.startsWith('/api/') || urlStr.includes('/api/')) {
         const storedKey = localStorage.getItem('mdz_active_license_key');
-        if (storedKey) {
-          const headers = new Headers(init?.headers || {});
-          if (!headers.has('X-License-Key')) {
-            headers.set('X-License-Key', storedKey);
-          }
-          init = { ...init, headers };
+        const headers = new Headers(init?.headers || {});
+        headers.set('bypass-tunnel-remainder', 'true');
+        headers.set('Bypass-Tunnel-Remainder', 'true');
+        if (storedKey && !headers.has('X-License-Key')) {
+          headers.set('X-License-Key', storedKey);
         }
+        init = { ...init, headers };
       }
     } catch (_) {}
     return nativeFetch(input, init);

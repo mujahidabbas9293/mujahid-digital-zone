@@ -639,9 +639,25 @@ export const AutoSenderView: React.FC = () => {
   const trustedAudioInputRef = useRef<HTMLInputElement | null>(null);
   const trustedDocInputRef = useRef<HTMLInputElement | null>(null);
 
-  const apiFetch = async (url: string, options: RequestInit = {}) => {
-    return fetch(url, options);
-  };
+  const apiFetch = useCallback(async (url: string, options: RequestInit = {}) => {
+    const delim = url.includes('?') ? '&' : '?';
+    const activeKey = typeof window !== 'undefined' ? (localStorage.getItem('customer_active_license_key') || localStorage.getItem('mdz_active_license_key') || '') : '';
+    const customerId = typeof window !== 'undefined' ? (localStorage.getItem('mdz_whatsapp_center_customer_id') || 'default_customer') : 'default_customer';
+    const deviceUuid = typeof window !== 'undefined' ? (localStorage.getItem('customer_device_uuid') || '') : '';
+
+    let finalUrl = `${url}${delim}customerId=${encodeURIComponent(customerId)}`;
+    if (deviceUuid) finalUrl += `&device_uuid=${encodeURIComponent(deviceUuid)}`;
+    if (activeKey) finalUrl += `&license_key=${encodeURIComponent(activeKey)}&licenseKey=${encodeURIComponent(activeKey)}`;
+
+    const headers = new Headers(options.headers || {});
+    headers.set('x-customer-id', customerId);
+    headers.set('bypass-tunnel-remainder', 'true');
+    headers.set('Bypass-Tunnel-Remainder', 'true');
+    if (deviceUuid) headers.set('x-device-uuid', deviceUuid);
+    if (activeKey) headers.set('X-License-Key', activeKey);
+
+    return fetch(finalUrl, { ...options, headers });
+  }, []);
 
   const showNotification = (type: 'success' | 'error' | 'info', text: string) => {
     setNotification({ type, text });
