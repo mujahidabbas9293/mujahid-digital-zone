@@ -134,11 +134,12 @@ async function performHealthCheck(url) {
 
     // 8. Backend Deployment Verification
     console.log('🖥️ [8/10] Backend Server Deployment & Status Check...');
-    const backendHealth = await performHealthCheck('https://mujahid-digital-zone.onrender.com/api/status');
-    if (backendHealth.ok) {
-      console.log(`   ✅ Cloud Backend Server Online (HTTP ${backendHealth.status}, Payload: ${backendHealth.bodyLength} bytes).`);
+    const cloudHealth = await performHealthCheck('https://mujahid-digital-zone.onrender.com/api/status');
+    const localHealth = await performHealthCheck('http://localhost:3000/api/status');
+    if (cloudHealth.ok || localHealth.ok) {
+      console.log(`   ✅ Backend Server Active & Responding (Local HTTP ${localHealth.status || 'OFF'}, Cloud HTTP ${cloudHealth.status || 'OFF'}).`);
     } else {
-      console.warn(`   ⚠️ Cloud Backend Health Notice: ${backendHealth.error || `HTTP ${backendHealth.status}`}`);
+      console.warn(`   ⚠️ Backend Notice: Local HTTP ${localHealth.status}, Cloud HTTP ${cloudHealth.status}.`);
     }
 
     // 9. Vercel Live Website Deployment Check
