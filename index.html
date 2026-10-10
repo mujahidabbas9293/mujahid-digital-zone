@@ -3,33 +3,6 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="referrer" content="no-referrer" />
-    <script>
-      (function() {
-        try {
-          var _nativeFetch = window.fetch;
-          var defineFetchProperty = function(target) {
-            try {
-              Object.defineProperty(target, 'fetch', {
-                get: function() {
-                  return _nativeFetch;
-                },
-                set: function(val) {
-                  _nativeFetch = val;
-                },
-                configurable: true,
-                enumerable: true
-              });
-            } catch (_) {}
-          };
-          defineFetchProperty(window);
-          if (typeof Window !== 'undefined' && Window.prototype) {
-            defineFetchProperty(Window.prototype);
-          }
-        } catch (e) {
-          console.warn('Window.fetch setup:', e);
-        }
-      })();
-    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Remix Mujahid Digital Zone WhatsApp Bot & Moderation Console</title>
     <meta name="description" content="Production-grade WhatsApp group moderation bot and 24/7 operations control panel with live QR and pairing code, anti-link defense, warning rules, member identity resolution, and reputation tracking." />
