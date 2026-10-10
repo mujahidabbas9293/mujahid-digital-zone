@@ -63,7 +63,19 @@ const CUSTOMER_STORES_DIR = path.join(DATA_DIR, 'customer_stores');
 
 // INSTANT PORT 3000 BINDING FOR CLOUD RUN STARTUP TCP PROBE
 const app = express();
-app.get('/health', (_req, res) => res.status(200).send('OK'));
+
+// Enable CORS for Vercel and cross-origin clients
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-License-Key, X-Requested-With');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
+app.get('/health', (_req, res) => res.status(200).json({ status: 'OK', uptime: process.uptime(), timestamp: new Date().toISOString() }));
 app.get('/healthz', (_req, res) => res.status(200).send('OK'));
 app.get('/ping', (_req, res) => res.status(200).send('pong'));
 const defaultPort = Number(process.env.PORT) || 3000;
