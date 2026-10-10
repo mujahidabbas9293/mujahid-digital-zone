@@ -63,10 +63,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const fetchLiveBackendRecords = async () => {
     try {
       const [groupsRes, tasksRes, scamRes, trustedRes] = await Promise.all([
-        fetch('/api/auto-sender/groups').then(r => r.json()).catch(() => []),
-        fetch('/api/auto-sender/tasks').then(r => r.json()).catch(() => []),
-        fetch('/api/auto-sender/scam-reports').then(r => r.json()).catch(() => []),
-        fetch('/api/auto-sender/trusted-posts').then(r => r.json()).catch(() => [])
+        fetch('/api/auto-sender/groups').then(r => r.ok ? r.json() : []).catch(() => []),
+        fetch('/api/auto-sender/tasks').then(r => r.ok ? r.json() : []).catch(() => []),
+        fetch('/api/auto-sender/scam-reports').then(r => r.ok ? r.json() : []).catch(() => []),
+        fetch('/api/auto-sender/trusted-posts').then(r => r.ok ? r.json() : []).catch(() => [])
       ]);
 
       if (Array.isArray(groupsRes)) setAutoSenderGroups(groupsRes);
@@ -88,16 +88,23 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   // Compute 5 Real Dashboard Statistics
   const dashboardStats = useMemo(() => {
-    const eligibleGroupsCount = autoSenderGroups.length > 0
-      ? autoSenderGroups.filter(g => g.can_send !== false).length
-      : groups.filter(g => g.is_active).length;
+    const safeGroups = Array.isArray(groups) ? groups : [];
+    const safeAutoGroups = Array.isArray(autoSenderGroups) ? autoSenderGroups : [];
+    const safeAutoTasks = Array.isArray(autoSenderTasks) ? autoSenderTasks : [];
+    const safeScam = Array.isArray(autoSenderScamReports) ? autoSenderScamReports : [];
+    const safeTrusted = Array.isArray(autoSenderTrustedPosts) ? autoSenderTrustedPosts : [];
+
+    const eligibleGroupsCount = safeAutoGroups.length > 0
+      ? safeAutoGroups.filter(g => g && g.can_send !== false).length
+      : safeGroups.filter(g => g && g.is_active).length;
 
     let totalPostsSent = 0;
     let totalFailedSends = 0;
     let totalPendingSends = 0;
     let totalScheduledPosts = 0;
 
-    autoSenderTasks.forEach(t => {
+    safeAutoTasks.forEach(t => {
+      if (!t) return;
       totalPostsSent += t.sent_count || 0;
       totalFailedSends += t.failed_count || 0;
       totalPendingSends += t.pending_count || 0;
@@ -106,13 +113,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       }
     });
 
-    autoSenderScamReports.forEach(r => {
+    safeScam.forEach(r => {
+      if (!r) return;
       totalPostsSent += r.sent_count || 0;
       totalFailedSends += r.failed_count || 0;
       totalPendingSends += r.pending_count || 0;
     });
 
-    autoSenderTrustedPosts.forEach(tp => {
+    safeTrusted.forEach(tp => {
+      if (!tp) return;
       totalPostsSent += tp.sent_count || 0;
       totalFailedSends += tp.failed_count || 0;
       totalPendingSends += tp.pending_count || 0;
