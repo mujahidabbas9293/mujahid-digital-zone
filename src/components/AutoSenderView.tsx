@@ -230,14 +230,14 @@ export const AutoSenderView: React.FC = () => {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) return parsed;
       }
-    } catch (_) {}
+    } catch (_) { }
     return [];
   });
 
   useEffect(() => {
     try {
       localStorage.setItem('mdz_autosender_selected_group_ids', JSON.stringify(selectedGroups));
-    } catch (_) {}
+    } catch (_) { }
   }, [selectedGroups]);
 
   // Group Sending Interval State (4s, 5s, 10s, 20s, or Custom Interval)
@@ -503,7 +503,7 @@ export const AutoSenderView: React.FC = () => {
       const isWithin10Min = diffMs > 0 && diffMs <= 10 * 60 * 1000;
       const isDueNow = diffMs <= 0 && diffMs >= -30 * 1000 && task.status !== 'PAUSED' && task.status !== 'BLOCKED';
       const nextDate = new Date(targetMs);
-      
+
       const isToday = nextDate.toDateString() === todayObj.toDateString();
       const tomorrowObj = new Date(todayObj);
       tomorrowObj.setDate(tomorrowObj.getDate() + 1);
@@ -913,7 +913,7 @@ export const AutoSenderView: React.FC = () => {
           const taskId = task.post_id || task.id;
           apiFetch(`/api/auto-sender/tasks/${taskId}/execute`, { method: 'POST' })
             .then(() => fetchStatusAndData(false))
-            .catch(() => {});
+            .catch(() => { });
         }
       });
     }
@@ -2106,8 +2106,8 @@ export const AutoSenderView: React.FC = () => {
       showNotification('success', action === 'PUBLISH_STATUS_ONLY'
         ? 'Successfully published to WhatsApp My Status!'
         : (action === 'PUBLISH_AND_NOTIFY' || action === 'PUBLISH_STATUS')
-        ? 'WhatsApp My Status published and notifications sent to selected groups!'
-        : (action === 'DRAFT' ? 'Status campaign saved as draft.' : 'Status campaign scheduled successfully.'));
+          ? 'WhatsApp My Status published and notifications sent to selected groups!'
+          : (action === 'DRAFT' ? 'Status campaign saved as draft.' : 'Status campaign scheduled successfully.'));
 
       setStatusNotifModalOpen(false);
       await fetchStatusAndData(false);
@@ -2269,17 +2269,16 @@ export const AutoSenderView: React.FC = () => {
 
   return (
     <div className="w-full max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8 space-y-8 bg-slate-950 text-slate-100 min-h-screen font-sans">
-      
+
       {/* GLOBAL TOAST NOTIFICATION */}
       {notification && (
-        <div className={`fixed top-5 right-5 z-50 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 border transition-all animate-bounce ${
-          notification.type === 'success' ? 'bg-emerald-950/90 border-emerald-500/50 text-emerald-200' :
+        <div className={`fixed top-5 right-5 z-50 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 border transition-all animate-bounce ${notification.type === 'success' ? 'bg-emerald-950/90 border-emerald-500/50 text-emerald-200' :
           notification.type === 'error' ? 'bg-rose-950/90 border-rose-500/50 text-rose-200' :
-          'bg-cyan-950/90 border-cyan-500/50 text-cyan-200'
-        }`}>
+            'bg-cyan-950/90 border-cyan-500/50 text-cyan-200'
+          }`}>
           {notification.type === 'success' ? <CheckCircle2 className="w-6 h-6 text-emerald-400" /> :
-           notification.type === 'error' ? <AlertCircle className="w-6 h-6 text-rose-400" /> :
-           <Activity className="w-6 h-6 text-cyan-400" />}
+            notification.type === 'error' ? <AlertCircle className="w-6 h-6 text-rose-400" /> :
+              <Activity className="w-6 h-6 text-cyan-400" />}
           <span className="text-sm font-semibold">{notification.text}</span>
           <button onClick={() => setNotification(null)} className="ml-2 hover:opacity-75">
             <X className="w-4 h-4" />
@@ -2309,9 +2308,8 @@ export const AutoSenderView: React.FC = () => {
                 </div>
               )}
               <span
-                className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-4 border-slate-900 flex items-center justify-center ${
-                  isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'
-                }`}
+                className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-4 border-slate-900 flex items-center justify-center ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'
+                  }`}
               />
             </div>
 
@@ -2387,7 +2385,7 @@ export const AutoSenderView: React.FC = () => {
         {/* 2. ENLARGED 5 MAIN DASHBOARD STATISTIC CARDS (HORIZONTAL ROW) */}
         {/* ======================================================== */}
         <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 pt-6 border-t border-slate-800/80">
-          
+
           {/* 1. Total Eligible Groups */}
           <div className="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-5 hover:border-emerald-500/40 transition-all flex items-center justify-between group">
             <div className="space-y-1">
@@ -2457,12 +2455,11 @@ export const AutoSenderView: React.FC = () => {
       {/* 2. FULL TOP NAVIGATION BAR (ALL 9 MODULES) */}
       {/* ======================================================== */}
       <nav className="bg-slate-900/90 border border-slate-800 rounded-2xl p-2 shadow-xl flex items-center gap-1.5 overflow-x-auto scrollbar-none backdrop-blur-md">
-        
+
         <button
           onClick={() => setActiveTab('dashboard')}
-          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 whitespace-nowrap transition-all ${
-            activeTab === 'dashboard' ? 'bg-[#25D366] text-slate-950 shadow-lg shadow-[#25D366]/20' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-          }`}
+          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 whitespace-nowrap transition-all ${activeTab === 'dashboard' ? 'bg-[#25D366] text-slate-950 shadow-lg shadow-[#25D366]/20' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+            }`}
         >
           <Send className="w-4 h-4 text-emerald-400 fill-current" />
           <span>WhatsApp Sender Auto Post</span>
@@ -2473,9 +2470,8 @@ export const AutoSenderView: React.FC = () => {
 
         <button
           onClick={handleOpenNewPostForm}
-          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 whitespace-nowrap transition-all ${
-            activeTab === 'new-post' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-          }`}
+          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 whitespace-nowrap transition-all ${activeTab === 'new-post' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+            }`}
         >
           <Plus className="w-4 h-4" />
           New Auto Post
@@ -2483,9 +2479,8 @@ export const AutoSenderView: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('schedules')}
-          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 whitespace-nowrap transition-all ${
-            activeTab === 'schedules' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-          }`}
+          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 whitespace-nowrap transition-all ${activeTab === 'schedules' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+            }`}
         >
           <Calendar className="w-4 h-4" />
           Auto Post Schedules ({tasks.length})
@@ -2493,9 +2488,8 @@ export const AutoSenderView: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('connection')}
-          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 whitespace-nowrap transition-all ${
-            activeTab === 'connection' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-          }`}
+          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 whitespace-nowrap transition-all ${activeTab === 'connection' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+            }`}
         >
           <QrCode className="w-4 h-4" />
           WhatsApp Connection
@@ -2503,24 +2497,22 @@ export const AutoSenderView: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('groups')}
-          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 whitespace-nowrap transition-all ${
-            activeTab === 'groups' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-          }`}
+          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 whitespace-nowrap transition-all ${activeTab === 'groups' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+            }`}
         >
           <Users className="w-4 h-4" />
           Real Groups ({groups.length})
         </button>
 
-        
+
 
         {/* TRUSTED POST DEDICATED BUTTON */}
         <button
           onClick={() => setActiveTab('trusted-posts')}
-          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 whitespace-nowrap transition-all border ${
-            activeTab === 'trusted-posts'
-              ? 'bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-900/40'
-              : 'bg-indigo-950/40 border-indigo-500/30 text-indigo-300 hover:bg-indigo-900/50 hover:text-white'
-          }`}
+          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 whitespace-nowrap transition-all border ${activeTab === 'trusted-posts'
+            ? 'bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-900/40'
+            : 'bg-indigo-950/40 border-indigo-500/30 text-indigo-300 hover:bg-indigo-900/50 hover:text-white'
+            }`}
         >
           <Award className="w-4 h-4 text-indigo-300" />
           Trusted Post
@@ -2529,11 +2521,10 @@ export const AutoSenderView: React.FC = () => {
         {/* STATUS NOTIFICATION DEDICATED BUTTON — PLACED STRICTLY BETWEEN TRUSTED AND SCAMMER POST */}
         <button
           onClick={() => setActiveTab('status-notifications')}
-          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 whitespace-nowrap transition-all border ${
-            activeTab === 'status-notifications'
-              ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 border-emerald-400 text-white shadow-lg shadow-emerald-950/60 ring-2 ring-emerald-400/40'
-              : 'bg-gradient-to-r from-emerald-950/50 via-slate-900 to-teal-950/50 border-emerald-500/40 text-emerald-300 hover:bg-emerald-900/50 hover:text-white hover:border-emerald-400'
-          }`}
+          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 whitespace-nowrap transition-all border ${activeTab === 'status-notifications'
+            ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 border-emerald-400 text-white shadow-lg shadow-emerald-950/60 ring-2 ring-emerald-400/40'
+            : 'bg-gradient-to-r from-emerald-950/50 via-slate-900 to-teal-950/50 border-emerald-500/40 text-emerald-300 hover:bg-emerald-900/50 hover:text-white hover:border-emerald-400'
+            }`}
         >
           <BellRing className="w-4 h-4 text-emerald-400 animate-pulse" />
           <span>STATUS NOTIFICATION</span>
@@ -2545,11 +2536,10 @@ export const AutoSenderView: React.FC = () => {
         {/* SCAM REPORT POST DEDICATED BUTTON */}
         <button
           onClick={() => setActiveTab('scam-reports')}
-          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 whitespace-nowrap transition-all border ${
-            activeTab === 'scam-reports'
-              ? 'bg-rose-600 border-rose-500 text-white shadow-lg shadow-rose-900/40 animate-pulse'
-              : 'bg-rose-950/40 border-rose-500/30 text-rose-300 hover:bg-rose-900/50 hover:text-white'
-          }`}
+          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 whitespace-nowrap transition-all border ${activeTab === 'scam-reports'
+            ? 'bg-rose-600 border-rose-500 text-white shadow-lg shadow-rose-900/40 animate-pulse'
+            : 'bg-rose-950/40 border-rose-500/30 text-rose-300 hover:bg-rose-900/50 hover:text-white'
+            }`}
         >
           <ShieldAlert className="w-4 h-4 text-rose-300" />
           Scam Report Post
@@ -2559,9 +2549,8 @@ export const AutoSenderView: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('status-report')}
-          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 whitespace-nowrap transition-all ${
-            activeTab === 'status-report' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-          }`}
+          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 whitespace-nowrap transition-all ${activeTab === 'status-report' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+            }`}
         >
           <Activity className="w-4 h-4" />
           Complete Status
@@ -2569,9 +2558,8 @@ export const AutoSenderView: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('history')}
-          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 whitespace-nowrap transition-all ${
-            activeTab === 'history' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-          }`}
+          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 whitespace-nowrap transition-all ${activeTab === 'history' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+            }`}
         >
           <History className="w-4 h-4" />
           Posting History
@@ -2579,9 +2567,8 @@ export const AutoSenderView: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('settings')}
-          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 whitespace-nowrap transition-all ${
-            activeTab === 'settings' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-          }`}
+          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 whitespace-nowrap transition-all ${activeTab === 'settings' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+            }`}
         >
           <Settings className="w-4 h-4" />
           Settings & Health
@@ -2616,13 +2603,13 @@ export const AutoSenderView: React.FC = () => {
             <select
               value={
                 activeTab === 'dashboard' ? 'auto-post-dashboard' :
-                activeTab === 'new-post' ? 'new-post' :
-                activeTab === 'schedules' ? 'schedules' :
-                activeTab === 'scam-reports' ? 'scam-reports' :
-                activeTab === 'trusted-posts' ? 'trusted-posts' :
-                activeTab === 'groups' ? 'groups' :
-                activeTab === 'connection' ? 'connection' :
-                'auto-post-dashboard'
+                  activeTab === 'new-post' ? 'new-post' :
+                    activeTab === 'schedules' ? 'schedules' :
+                      activeTab === 'scam-reports' ? 'scam-reports' :
+                        activeTab === 'trusted-posts' ? 'trusted-posts' :
+                          activeTab === 'groups' ? 'groups' :
+                            activeTab === 'connection' ? 'connection' :
+                              'auto-post-dashboard'
               }
               onChange={(e) => {
                 const val = e.target.value;
@@ -2653,14 +2640,14 @@ export const AutoSenderView: React.FC = () => {
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <span>
               {activeTab === 'dashboard' ? 'WhatsApp Sender Auto Post Active' :
-               activeTab === 'new-post' ? 'Create New Auto Post Active' :
-               activeTab === 'schedules' ? 'Auto Post Schedules Active' :
-               activeTab === 'scam-reports' ? 'Scam Report Post Active' :
-               activeTab === 'trusted-posts' ? 'Trusted Post Active' :
-               activeTab === 'status-notifications' ? 'Status Notification Active' :
-               activeTab === 'groups' ? 'Real Groups Active' :
-               activeTab === 'connection' ? 'WhatsApp Connection Active' :
-               'Active Module'}
+                activeTab === 'new-post' ? 'Create New Auto Post Active' :
+                  activeTab === 'schedules' ? 'Auto Post Schedules Active' :
+                    activeTab === 'scam-reports' ? 'Scam Report Post Active' :
+                      activeTab === 'trusted-posts' ? 'Trusted Post Active' :
+                        activeTab === 'status-notifications' ? 'Status Notification Active' :
+                          activeTab === 'groups' ? 'Real Groups Active' :
+                            activeTab === 'connection' ? 'WhatsApp Connection Active' :
+                              'Active Module'}
             </span>
           </div>
         </div>
@@ -2876,11 +2863,10 @@ export const AutoSenderView: React.FC = () => {
 
                           {/* 9. Expire Date (Green when valid, Red when expired) */}
                           <td className="py-3.5 px-4 text-center align-middle">
-                            <span className={`text-[11px] font-mono px-3 py-1.5 rounded-xl border font-bold inline-block text-center whitespace-nowrap ${
-                              isExpired
-                                ? 'bg-rose-500/15 border-rose-500/40 text-rose-300'
-                                : 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300'
-                            }`}>
+                            <span className={`text-[11px] font-mono px-3 py-1.5 rounded-xl border font-bold inline-block text-center whitespace-nowrap ${isExpired
+                              ? 'bg-rose-500/15 border-rose-500/40 text-rose-300'
+                              : 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300'
+                              }`}>
                               {expiryDateStr}
                             </span>
                           </td>
@@ -3087,9 +3073,8 @@ export const AutoSenderView: React.FC = () => {
                           {grp.member_count || grp.members?.length || 'Live'} members
                         </span>
                         <span>•</span>
-                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                          grp.can_send !== false ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                        }`}>
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${grp.can_send !== false ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                          }`}>
                           {grp.can_send !== false ? 'Posting Allowed' : 'Admin Only'}
                         </span>
                       </div>
@@ -3166,9 +3151,8 @@ export const AutoSenderView: React.FC = () => {
           </div>
 
           {submitFeedback && (
-            <div className={`p-4 rounded-2xl text-xs font-bold border flex items-center gap-2.5 ${
-              submitFeedback.type === 'success' ? 'bg-emerald-950/70 border-emerald-500/50 text-emerald-300' : 'bg-rose-950/70 border-rose-500/50 text-rose-300'
-            }`}>
+            <div className={`p-4 rounded-2xl text-xs font-bold border flex items-center gap-2.5 ${submitFeedback.type === 'success' ? 'bg-emerald-950/70 border-emerald-500/50 text-emerald-300' : 'bg-rose-950/70 border-rose-500/50 text-rose-300'
+              }`}>
               {submitFeedback.type === 'success' ? <CheckCircle2 className="w-5 h-5 text-emerald-400" /> : <AlertCircle className="w-5 h-5 text-rose-400" />}
               {submitFeedback.text}
             </div>
@@ -3176,10 +3160,10 @@ export const AutoSenderView: React.FC = () => {
 
           {/* Main 2-Column Responsive Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            
+
             {/* Left Column: Form Controls (7 cols on lg) */}
             <form onSubmit={handleSubmitPost} className="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-7 shadow-2xl space-y-5">
-              
+
               {/* 1. Tool Name / Head Name (Highlighted Headline) */}
               <div className="space-y-1.5 bg-slate-950/60 p-4 rounded-2xl border border-slate-800/80">
                 <div className="flex items-center justify-between">
@@ -3339,11 +3323,10 @@ export const AutoSenderView: React.FC = () => {
                             key={num}
                             type="button"
                             onClick={() => setPostsPerDay(num)}
-                            className={`px-2 py-1 rounded-md text-[10px] font-bold transition-all ${
-                              postsPerDay === num
-                                ? 'bg-emerald-600 text-white'
-                                : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
-                            }`}
+                            className={`px-2 py-1 rounded-md text-[10px] font-bold transition-all ${postsPerDay === num
+                              ? 'bg-emerald-600 text-white'
+                              : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
+                              }`}
                           >
                             {num}x
                           </button>
@@ -3377,11 +3360,10 @@ export const AutoSenderView: React.FC = () => {
                             key={hrs}
                             type="button"
                             onClick={() => setPostingIntervalHours(hrs)}
-                            className={`px-2 py-1 rounded-md text-[10px] font-bold transition-all ${
-                              postingIntervalHours === hrs
-                                ? 'bg-emerald-600 text-white'
-                                : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
-                            }`}
+                            className={`px-2 py-1 rounded-md text-[10px] font-bold transition-all ${postingIntervalHours === hrs
+                              ? 'bg-emerald-600 text-white'
+                              : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
+                              }`}
                           >
                             {hrs}h
                           </button>
@@ -3464,11 +3446,10 @@ export const AutoSenderView: React.FC = () => {
                       key={dur.key}
                       type="button"
                       onClick={() => setValidityDuration(dur.key)}
-                      className={`p-2.5 rounded-xl text-xs font-bold text-center border transition-all ${
-                        validityDuration === dur.key
-                          ? 'bg-emerald-600 border-emerald-500 text-white shadow-md'
-                          : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
-                      }`}
+                      className={`p-2.5 rounded-xl text-xs font-bold text-center border transition-all ${validityDuration === dur.key
+                        ? 'bg-emerald-600 border-emerald-500 text-white shadow-md'
+                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                        }`}
                     >
                       {dur.label}
                     </button>
@@ -3508,11 +3489,10 @@ export const AutoSenderView: React.FC = () => {
                       key={btn.mode}
                       type="button"
                       onClick={() => setGroupIntervalMode(btn.mode as any)}
-                      className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all border ${
-                        groupIntervalMode === btn.mode
-                          ? 'bg-emerald-600 border-emerald-500 text-white shadow-md'
-                          : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white hover:bg-slate-850'
-                      }`}
+                      className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all border ${groupIntervalMode === btn.mode
+                        ? 'bg-emerald-600 border-emerald-500 text-white shadow-md'
+                        : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white hover:bg-slate-850'
+                        }`}
                     >
                       {btn.label}
                     </button>
@@ -3631,11 +3611,10 @@ export const AutoSenderView: React.FC = () => {
                       return (
                         <label
                           key={grp.jid}
-                          className={`flex items-center justify-between p-2 rounded-xl border cursor-pointer transition-all ${
-                            isChecked
-                              ? 'bg-emerald-950/30 border-emerald-500/40 text-emerald-200'
-                              : 'bg-slate-900/50 border-slate-800/80 text-slate-300 hover:bg-slate-900'
-                          }`}
+                          className={`flex items-center justify-between p-2 rounded-xl border cursor-pointer transition-all ${isChecked
+                            ? 'bg-emerald-950/30 border-emerald-500/40 text-emerald-200'
+                            : 'bg-slate-900/50 border-slate-800/80 text-slate-300 hover:bg-slate-900'
+                            }`}
                         >
                           <div className="flex items-center gap-2.5 min-w-0 flex-1">
                             <input
@@ -3803,11 +3782,10 @@ export const AutoSenderView: React.FC = () => {
                 </div>
 
                 {/* Validation Status Indicator */}
-                <div className={`p-2.5 rounded-xl text-xs font-bold border flex items-center gap-2 ${
-                  selectedGroups.length > 0 && (messageText.trim() || uploadedImageMeta)
-                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
-                    : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
-                }`}>
+                <div className={`p-2.5 rounded-xl text-xs font-bold border flex items-center gap-2 ${selectedGroups.length > 0 && (messageText.trim() || uploadedImageMeta)
+                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                  : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+                  }`}>
                   {selectedGroups.length > 0 && (messageText.trim() || uploadedImageMeta) ? (
                     <>
                       <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
@@ -3849,17 +3827,15 @@ export const AutoSenderView: React.FC = () => {
             <div className="flex items-center gap-2 bg-slate-900 p-1.5 rounded-2xl border border-slate-800">
               <button
                 onClick={() => setScamSubTab('create')}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                  scamSubTab === 'create' ? 'bg-rose-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
-                }`}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${scamSubTab === 'create' ? 'bg-rose-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 🚨 Create Scam Report
               </button>
               <button
                 onClick={() => setScamSubTab('history')}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                  scamSubTab === 'history' ? 'bg-rose-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
-                }`}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${scamSubTab === 'history' ? 'bg-rose-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 📜 Scam Reports History ({scamReports.length})
               </button>
@@ -3930,9 +3906,8 @@ export const AutoSenderView: React.FC = () => {
           </div>
 
           {scamSubmitFeedback && (
-            <div className={`p-4 rounded-2xl text-xs font-bold border flex items-center gap-2.5 ${
-              scamSubmitFeedback.type === 'success' ? 'bg-emerald-950/70 border-emerald-500/50 text-emerald-300' : 'bg-rose-950/70 border-rose-500/50 text-rose-300'
-            }`}>
+            <div className={`p-4 rounded-2xl text-xs font-bold border flex items-center gap-2.5 ${scamSubmitFeedback.type === 'success' ? 'bg-emerald-950/70 border-emerald-500/50 text-emerald-300' : 'bg-rose-950/70 border-rose-500/50 text-rose-300'
+              }`}>
               {scamSubmitFeedback.type === 'success' ? <CheckCircle2 className="w-5 h-5 text-emerald-400" /> : <AlertCircle className="w-5 h-5 text-rose-400" />}
               {scamSubmitFeedback.text}
             </div>
@@ -4085,9 +4060,8 @@ export const AutoSenderView: React.FC = () => {
                       return (
                         <label
                           key={grp.jid}
-                          className={`flex items-center justify-between p-2 rounded-xl border cursor-pointer text-xs ${
-                            isChecked ? 'bg-rose-950/30 border-rose-500/40 text-rose-200' : 'bg-slate-900/50 border-slate-800/80 text-slate-300'
-                          }`}
+                          className={`flex items-center justify-between p-2 rounded-xl border cursor-pointer text-xs ${isChecked ? 'bg-rose-950/30 border-rose-500/40 text-rose-200' : 'bg-slate-900/50 border-slate-800/80 text-slate-300'
+                            }`}
                         >
                           <div className="flex items-center gap-2.5">
                             <input
@@ -4260,17 +4234,15 @@ export const AutoSenderView: React.FC = () => {
             <div className="flex items-center gap-2 bg-slate-900 p-1.5 rounded-2xl border border-slate-800">
               <button
                 onClick={() => setTrustedSubTab('create')}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                  trustedSubTab === 'create' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
-                }`}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${trustedSubTab === 'create' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 ✨ Create Trusted Post
               </button>
               <button
                 onClick={() => setTrustedSubTab('history')}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                  trustedSubTab === 'history' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
-                }`}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${trustedSubTab === 'history' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 📜 Trusted Posts History ({trustedPosts.length})
               </button>
@@ -4341,9 +4313,8 @@ export const AutoSenderView: React.FC = () => {
           </div>
 
           {trustedSubmitFeedback && (
-            <div className={`p-4 rounded-2xl text-xs font-bold border flex items-center gap-2.5 ${
-              trustedSubmitFeedback.type === 'success' ? 'bg-emerald-950/70 border-emerald-500/50 text-emerald-300' : 'bg-rose-950/70 border-rose-500/50 text-rose-300'
-            }`}>
+            <div className={`p-4 rounded-2xl text-xs font-bold border flex items-center gap-2.5 ${trustedSubmitFeedback.type === 'success' ? 'bg-emerald-950/70 border-emerald-500/50 text-emerald-300' : 'bg-rose-950/70 border-rose-500/50 text-rose-300'
+              }`}>
               {trustedSubmitFeedback.type === 'success' ? <CheckCircle2 className="w-5 h-5 text-emerald-400" /> : <AlertCircle className="w-5 h-5 text-rose-400" />}
               {trustedSubmitFeedback.text}
             </div>
@@ -4352,7 +4323,7 @@ export const AutoSenderView: React.FC = () => {
           {trustedSubTab === 'create' ? (
             <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 max-w-4xl mx-auto">
               <div className="space-y-4">
-                
+
                 {/* 1. Trusted Name & Contact */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
@@ -4538,18 +4509,16 @@ export const AutoSenderView: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setTrustedScheduleMode('IMMEDIATE')}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                          trustedScheduleMode === 'IMMEDIATE' ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400'
-                        }`}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${trustedScheduleMode === 'IMMEDIATE' ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400'
+                          }`}
                       >
                         ⚡ Immediate
                       </button>
                       <button
                         type="button"
                         onClick={() => setTrustedScheduleMode('SCHEDULED')}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                          trustedScheduleMode === 'SCHEDULED' ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400'
-                        }`}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${trustedScheduleMode === 'SCHEDULED' ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400'
+                          }`}
                       >
                         📅 Schedule for Later
                       </button>
@@ -4598,9 +4567,8 @@ export const AutoSenderView: React.FC = () => {
                       return (
                         <label
                           key={grp.jid}
-                          className={`flex items-center justify-between p-2 rounded-xl border cursor-pointer text-xs ${
-                            isChecked ? 'bg-indigo-950/30 border-indigo-500/40 text-indigo-200' : 'bg-slate-900/50 border-slate-800/80 text-slate-300'
-                          }`}
+                          className={`flex items-center justify-between p-2 rounded-xl border cursor-pointer text-xs ${isChecked ? 'bg-indigo-950/30 border-indigo-500/40 text-indigo-200' : 'bg-slate-900/50 border-slate-800/80 text-slate-300'
+                            }`}
                         >
                           <div className="flex items-center gap-2.5">
                             <input
@@ -4837,11 +4805,10 @@ export const AutoSenderView: React.FC = () => {
           <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-slate-800 custom-scrollbar">
             <button
               onClick={() => setStatusNotifSubTab('my-status')}
-              className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 whitespace-nowrap transition-all border ${
-                statusNotifSubTab === 'my-status'
-                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 border-emerald-400 text-white shadow-lg shadow-emerald-950/60 ring-1 ring-emerald-400/40'
-                  : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800'
-              }`}
+              className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 whitespace-nowrap transition-all border ${statusNotifSubTab === 'my-status'
+                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 border-emerald-400 text-white shadow-lg shadow-emerald-950/60 ring-1 ring-emerald-400/40'
+                : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800'
+                }`}
             >
               <Smartphone className="w-4 h-4 text-emerald-400" />
               <span>📱 A. My WhatsApp Status</span>
@@ -4852,11 +4819,10 @@ export const AutoSenderView: React.FC = () => {
 
             <button
               onClick={() => setStatusNotifSubTab('dashboard')}
-              className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 whitespace-nowrap transition-all border ${
-                statusNotifSubTab === 'dashboard'
-                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 border-emerald-400 text-white shadow-lg shadow-emerald-950/60 ring-1 ring-emerald-400/40'
-                  : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800'
-              }`}
+              className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 whitespace-nowrap transition-all border ${statusNotifSubTab === 'dashboard'
+                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 border-emerald-400 text-white shadow-lg shadow-emerald-950/60 ring-1 ring-emerald-400/40'
+                : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800'
+                }`}
             >
               <Megaphone className="w-4 h-4 text-teal-400" />
               <span>📢 B & D. Status Campaigns</span>
@@ -4867,11 +4833,10 @@ export const AutoSenderView: React.FC = () => {
 
             <button
               onClick={() => setStatusNotifSubTab('groups')}
-              className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 whitespace-nowrap transition-all border ${
-                statusNotifSubTab === 'groups'
-                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 border-emerald-400 text-white shadow-lg shadow-emerald-950/60 ring-1 ring-emerald-400/40'
-                  : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800'
-              }`}
+              className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 whitespace-nowrap transition-all border ${statusNotifSubTab === 'groups'
+                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 border-emerald-400 text-white shadow-lg shadow-emerald-950/60 ring-1 ring-emerald-400/40'
+                : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800'
+                }`}
             >
               <Users className="w-4 h-4 text-indigo-400" />
               <span>👥 E. WhatsApp Groups</span>
@@ -4882,11 +4847,10 @@ export const AutoSenderView: React.FC = () => {
 
             <button
               onClick={() => setStatusNotifSubTab('history')}
-              className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 whitespace-nowrap transition-all border ${
-                statusNotifSubTab === 'history'
-                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 border-emerald-400 text-white shadow-lg shadow-emerald-950/60 ring-1 ring-emerald-400/40'
-                  : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800'
-              }`}
+              className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 whitespace-nowrap transition-all border ${statusNotifSubTab === 'history'
+                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 border-emerald-400 text-white shadow-lg shadow-emerald-950/60 ring-1 ring-emerald-400/40'
+                : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800'
+                }`}
             >
               <History className="w-4 h-4 text-amber-400" />
               <span>📜 G. Delivery History</span>
@@ -4894,11 +4858,10 @@ export const AutoSenderView: React.FC = () => {
 
             <button
               onClick={() => setStatusNotifSubTab('analytics')}
-              className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 whitespace-nowrap transition-all border ${
-                statusNotifSubTab === 'analytics'
-                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 border-emerald-400 text-white shadow-lg shadow-emerald-950/60 ring-1 ring-emerald-400/40'
-                  : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800'
-              }`}
+              className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 whitespace-nowrap transition-all border ${statusNotifSubTab === 'analytics'
+                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 border-emerald-400 text-white shadow-lg shadow-emerald-950/60 ring-1 ring-emerald-400/40'
+                : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800'
+                }`}
             >
               <Activity className="w-4 h-4 text-cyan-400" />
               <span>📊 H. Live Analytics</span>
@@ -5373,15 +5336,14 @@ export const AutoSenderView: React.FC = () => {
                               {/* 3. Campaign State */}
                               <td className="py-3.5 px-3">
                                 <div className="space-y-1">
-                                  <span className={`px-2.5 py-1 rounded-lg text-[11px] font-bold inline-block ${
-                                    notif.status === 'ACTIVE'
-                                      ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-300'
-                                      : notif.status === 'PAUSED'
+                                  <span className={`px-2.5 py-1 rounded-lg text-[11px] font-bold inline-block ${notif.status === 'ACTIVE'
+                                    ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-300'
+                                    : notif.status === 'PAUSED'
                                       ? 'bg-amber-500/15 border border-amber-500/30 text-amber-300'
                                       : notif.status === 'EXPIRED'
-                                      ? 'bg-slate-800 border border-slate-700 text-slate-400'
-                                      : 'bg-slate-800 border border-slate-700 text-slate-300'
-                                  }`}>
+                                        ? 'bg-slate-800 border border-slate-700 text-slate-400'
+                                        : 'bg-slate-800 border border-slate-700 text-slate-300'
+                                    }`}>
                                     {notif.status || 'DRAFT'}
                                   </span>
                                   <p className="text-[10px] text-slate-400">
@@ -5616,11 +5578,10 @@ export const AutoSenderView: React.FC = () => {
                             prev.includes(g.jid) ? prev.filter(j => j !== g.jid) : [...prev, g.jid]
                           );
                         }}
-                        className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${
-                          isSelected
-                            ? 'bg-indigo-950/40 border-indigo-500/50 shadow-md ring-1 ring-indigo-500/30'
-                            : 'bg-slate-950/60 border-slate-800/80 hover:bg-slate-900 hover:border-slate-700'
-                        }`}
+                        className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${isSelected
+                          ? 'bg-indigo-950/40 border-indigo-500/50 shadow-md ring-1 ring-indigo-500/30'
+                          : 'bg-slate-950/60 border-slate-800/80 hover:bg-slate-900 hover:border-slate-700'
+                          }`}
                       >
                         {/* Profile Avatar */}
                         {g.profile_picture_url ? (
@@ -5651,7 +5612,7 @@ export const AutoSenderView: React.FC = () => {
                           <input
                             type="checkbox"
                             checked={isSelected}
-                            onChange={() => {}}
+                            onChange={() => { }}
                             className="w-4 h-4 rounded text-indigo-600 focus:ring-0 cursor-pointer"
                           />
                         </div>
@@ -5722,13 +5683,12 @@ export const AutoSenderView: React.FC = () => {
                             {deliveries.map((d: any, didx: number) => (
                               <div
                                 key={didx}
-                                className={`p-2.5 rounded-lg border text-xs flex items-center justify-between ${
-                                  d.status === 'SENT' || d.status === 'DELIVERED'
-                                    ? 'bg-emerald-950/30 border-emerald-500/30 text-emerald-300'
-                                    : d.status === 'FAILED'
+                                className={`p-2.5 rounded-lg border text-xs flex items-center justify-between ${d.status === 'SENT' || d.status === 'DELIVERED'
+                                  ? 'bg-emerald-950/30 border-emerald-500/30 text-emerald-300'
+                                  : d.status === 'FAILED'
                                     ? 'bg-rose-950/30 border-rose-500/30 text-rose-300'
                                     : 'bg-amber-950/30 border-amber-500/30 text-amber-300'
-                                }`}
+                                  }`}
                               >
                                 <div className="min-w-0 pr-2">
                                   <span className="font-bold block truncate">{d.group_name || d.group_jid}</span>
@@ -5914,7 +5874,7 @@ export const AutoSenderView: React.FC = () => {
                   </button>
                 </div>
               </div>
-            ) : isQrAvailable && status?.qrDataUrl ? (
+            ) : (status?.qrDataUrl || isQrAvailable) && status?.qrDataUrl ? (
               <div className="space-y-4">
                 <div className="p-4 bg-white rounded-3xl inline-block shadow-2xl border-4 border-slate-800">
                   <img src={status.qrDataUrl} alt="WhatsApp QR" className="w-56 h-56 sm:w-64 sm:h-64 object-contain" />
@@ -5922,14 +5882,16 @@ export const AutoSenderView: React.FC = () => {
                 <p className="text-xs text-slate-400">
                   Open WhatsApp on your phone &gt; Linked Devices &gt; Link a Device and point your camera here.
                 </p>
-                <button
-                  onClick={handleRefreshQr}
-                  disabled={refreshing}
-                  className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold border border-slate-700 inline-flex items-center gap-2"
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-                  Refresh QR Code
-                </button>
+                <div className="flex justify-center gap-3">
+                  <button
+                    onClick={handleRefreshQr}
+                    disabled={refreshing}
+                    className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-lg inline-flex items-center gap-2 cursor-pointer"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+                    {refreshing ? 'Refreshing...' : 'Refresh QR Code'}
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="space-y-4 py-8">
@@ -5940,6 +5902,16 @@ export const AutoSenderView: React.FC = () => {
                 <p className="text-xs text-slate-400">
                   Preparing secure multi-device session on VPS cloud server. Please wait a few seconds.
                 </p>
+                <div className="pt-2 flex justify-center gap-3">
+                  <button
+                    onClick={handleRefreshQr}
+                    disabled={refreshing}
+                    className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-lg inline-flex items-center gap-2 cursor-pointer"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+                    {refreshing ? 'Generating QR...' : 'Generate Live QR Code'}
+                  </button>
+                </div>
               </div>
             )}
 
@@ -6230,12 +6202,12 @@ export const AutoSenderView: React.FC = () => {
             const filteredByDate = historyDateFilter === 'ALL'
               ? allUnifiedLogs
               : allUnifiedLogs.filter(l => {
-                  try {
-                    return new Date(l.sent_at).toISOString().slice(0, 10) === historyDateFilter;
-                  } catch (_) {
-                    return true;
-                  }
-                });
+                try {
+                  return new Date(l.sent_at).toISOString().slice(0, 10) === historyDateFilter;
+                } catch (_) {
+                  return true;
+                }
+              });
 
             // Filter by status
             const filteredByStatus = historyStatusFilter === 'ALL'
@@ -6246,10 +6218,10 @@ export const AutoSenderView: React.FC = () => {
             const finalLogs = historyGroupFilter.trim() === ''
               ? filteredByStatus
               : filteredByStatus.filter(l =>
-                  (l.group_name && l.group_name.toLowerCase().includes(historyGroupFilter.toLowerCase())) ||
-                  (l.tool_name && l.tool_name.toLowerCase().includes(historyGroupFilter.toLowerCase())) ||
-                  (l.order_id && l.order_id.toLowerCase().includes(historyGroupFilter.toLowerCase()))
-                );
+                (l.group_name && l.group_name.toLowerCase().includes(historyGroupFilter.toLowerCase())) ||
+                (l.tool_name && l.tool_name.toLowerCase().includes(historyGroupFilter.toLowerCase())) ||
+                (l.order_id && l.order_id.toLowerCase().includes(historyGroupFilter.toLowerCase()))
+              );
 
             const totalScheduled = finalLogs.length;
             const totalSent = finalLogs.filter(l => l.status === 'SENT').length;
@@ -6330,43 +6302,39 @@ export const AutoSenderView: React.FC = () => {
                     <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-bold">
                       <button
                         onClick={() => setHistoryStatusFilter('ALL')}
-                        className={`px-3 py-1 rounded-lg transition-all ${
-                          historyStatusFilter === 'ALL'
-                            ? 'bg-slate-800 text-white shadow-sm'
-                            : 'text-slate-400 hover:text-white'
-                        }`}
+                        className={`px-3 py-1 rounded-lg transition-all ${historyStatusFilter === 'ALL'
+                          ? 'bg-slate-800 text-white shadow-sm'
+                          : 'text-slate-400 hover:text-white'
+                          }`}
                       >
                         All
                       </button>
                       <button
                         onClick={() => setHistoryStatusFilter('SENT')}
-                        className={`px-3 py-1 rounded-lg inline-flex items-center gap-1 transition-all ${
-                          historyStatusFilter === 'SENT'
-                            ? 'bg-emerald-600 text-white shadow-sm'
-                            : 'text-emerald-400 hover:text-white'
-                        }`}
+                        className={`px-3 py-1 rounded-lg inline-flex items-center gap-1 transition-all ${historyStatusFilter === 'SENT'
+                          ? 'bg-emerald-600 text-white shadow-sm'
+                          : 'text-emerald-400 hover:text-white'
+                          }`}
                       >
                         <Check className="w-3 h-3 stroke-[3]" />
                         ✓ SEND
                       </button>
                       <button
                         onClick={() => setHistoryStatusFilter('PENDING')}
-                        className={`px-3 py-1 rounded-lg inline-flex items-center gap-1 transition-all ${
-                          historyStatusFilter === 'PENDING'
-                            ? 'bg-amber-600 text-white shadow-sm'
-                            : 'text-amber-400 hover:text-white'
-                        }`}
+                        className={`px-3 py-1 rounded-lg inline-flex items-center gap-1 transition-all ${historyStatusFilter === 'PENDING'
+                          ? 'bg-amber-600 text-white shadow-sm'
+                          : 'text-amber-400 hover:text-white'
+                          }`}
                       >
                         <Clock className="w-3 h-3" />
                         ◷ PENDING
                       </button>
                       <button
                         onClick={() => setHistoryStatusFilter('FAILED')}
-                        className={`px-3 py-1 rounded-lg inline-flex items-center gap-1 transition-all ${
-                          historyStatusFilter === 'FAILED'
-                            ? 'bg-rose-600 text-white shadow-sm'
-                            : 'text-rose-400 hover:text-white'
-                        }`}
+                        className={`px-3 py-1 rounded-lg inline-flex items-center gap-1 transition-all ${historyStatusFilter === 'FAILED'
+                          ? 'bg-rose-600 text-white shadow-sm'
+                          : 'text-rose-400 hover:text-white'
+                          }`}
                       >
                         <X className="w-3 h-3 stroke-[3]" />
                         ✕ FAILED
@@ -6418,7 +6386,7 @@ export const AutoSenderView: React.FC = () => {
                                 formattedDate = `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
                                 formattedTime = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
                               }
-                            } catch (_) {}
+                            } catch (_) { }
 
                             const orderIdStr = log.order_id || (log.task_id ? `#ORD-${log.task_id.replace(/^(auto_task_|task_)/, '').slice(0, 7).toUpperCase()}` : '#ORD-AUTO');
                             const toolNameStr = log.tool_name || 'Auto Marketing Post';
@@ -6603,9 +6571,8 @@ export const AutoSenderView: React.FC = () => {
                 <button
                   key={st}
                   onClick={() => setScheduleFilter(st)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                    scheduleFilter === st ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
-                  }`}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${scheduleFilter === st ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+                    }`}
                 >
                   {st}
                 </button>
@@ -6619,11 +6586,10 @@ export const AutoSenderView: React.FC = () => {
                 <div className="space-y-1.5 flex-1">
                   <div className="flex items-center gap-2.5">
                     <h4 className="text-sm font-bold text-white">{task.message ? task.message.slice(0, 50) + '...' : 'Media Broadcast'}</h4>
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                      task.status === 'ACTIVE' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' :
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${task.status === 'ACTIVE' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' :
                       task.status === 'PAUSED' ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30' :
-                      'bg-slate-800 text-slate-400 border border-slate-700'
-                    }`}>
+                        'bg-slate-800 text-slate-400 border border-slate-700'
+                      }`}>
                       {task.status}
                     </span>
                   </div>
@@ -6704,9 +6670,8 @@ export const AutoSenderView: React.FC = () => {
                 Select Supported Operation:
               </span>
 
-              <label className={`p-4 rounded-2xl border flex items-start gap-3 cursor-pointer transition-all ${
-                deleteGroupAction === 'REMOVE_FROM_DASHBOARD' ? 'bg-slate-950 border-emerald-500/50 text-emerald-200' : 'bg-slate-950/40 border-slate-800 text-slate-400'
-              }`}>
+              <label className={`p-4 rounded-2xl border flex items-start gap-3 cursor-pointer transition-all ${deleteGroupAction === 'REMOVE_FROM_DASHBOARD' ? 'bg-slate-950 border-emerald-500/50 text-emerald-200' : 'bg-slate-950/40 border-slate-800 text-slate-400'
+                }`}>
                 <input
                   type="radio"
                   name="groupDeleteAction"
@@ -6722,9 +6687,8 @@ export const AutoSenderView: React.FC = () => {
                 </div>
               </label>
 
-              <label className={`p-4 rounded-2xl border flex items-start gap-3 cursor-pointer transition-all ${
-                deleteGroupAction === 'LEAVE_WHATSAPP_GROUP' ? 'bg-rose-950/30 border-rose-500/50 text-rose-200' : 'bg-slate-950/40 border-slate-800 text-slate-400'
-              }`}>
+              <label className={`p-4 rounded-2xl border flex items-start gap-3 cursor-pointer transition-all ${deleteGroupAction === 'LEAVE_WHATSAPP_GROUP' ? 'bg-rose-950/30 border-rose-500/50 text-rose-200' : 'bg-slate-950/40 border-slate-800 text-slate-400'
+                }`}>
                 <input
                   type="radio"
                   name="groupDeleteAction"
@@ -7028,11 +6992,10 @@ ${trustedDescription || '[Description will appear here]'}
                           <span className="text-[11px] font-mono text-emerald-400">{mem.phone}</span>
                         </div>
                       </div>
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        mem.role === 'Owner' ? 'bg-purple-500/20 text-purple-300' :
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${mem.role === 'Owner' ? 'bg-purple-500/20 text-purple-300' :
                         mem.role === 'Admin' ? 'bg-cyan-500/20 text-cyan-300' :
-                        'bg-slate-800 text-slate-400'
-                      }`}>
+                          'bg-slate-800 text-slate-400'
+                        }`}>
                         {mem.role}
                       </span>
                     </div>
@@ -7210,12 +7173,11 @@ ${trustedDescription || '[Description will appear here]'}
                             <div className="text-[10px] font-mono text-slate-500">{jid}</div>
                           </td>
                           <td className="p-3">
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                              status === 'SENT' ? 'bg-emerald-500/20 text-emerald-300' :
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${status === 'SENT' ? 'bg-emerald-500/20 text-emerald-300' :
                               status === 'FAILED' ? 'bg-rose-500/20 text-rose-300' :
-                              status === 'DELETED' ? 'bg-purple-500/20 text-purple-300' :
-                              'bg-amber-500/20 text-amber-300'
-                            }`}>
+                                status === 'DELETED' ? 'bg-purple-500/20 text-purple-300' :
+                                  'bg-amber-500/20 text-amber-300'
+                              }`}>
                               {status}
                             </span>
                           </td>
@@ -7356,12 +7318,11 @@ ${trustedDescription || '[Description will appear here]'}
                             <div className="text-[10px] font-mono text-slate-500">{jid}</div>
                           </td>
                           <td className="p-3">
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                              status === 'SENT' ? 'bg-emerald-500/20 text-emerald-300' :
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${status === 'SENT' ? 'bg-emerald-500/20 text-emerald-300' :
                               status === 'FAILED' ? 'bg-rose-500/20 text-rose-300' :
-                              status === 'DELETED' ? 'bg-purple-500/20 text-purple-300' :
-                              'bg-amber-500/20 text-amber-300'
-                            }`}>
+                                status === 'DELETED' ? 'bg-purple-500/20 text-purple-300' :
+                                  'bg-amber-500/20 text-amber-300'
+                              }`}>
                               {status}
                             </span>
                           </td>
@@ -7838,8 +7799,8 @@ ${trustedDescription || '[Description will appear here]'}
 
                   const status: 'SENT' | 'PENDING' | 'FAILED' =
                     delivery?.status === 'SENT' || log?.status === 'SENT' ? 'SENT' :
-                    delivery?.status === 'FAILED' || log?.status === 'FAILED' ? 'FAILED' :
-                    'PENDING';
+                      delivery?.status === 'FAILED' || log?.status === 'FAILED' ? 'FAILED' :
+                        'PENDING';
 
                   return {
                     group_id: jid,
@@ -7953,43 +7914,39 @@ ${trustedDescription || '[Description will appear here]'}
                       <div className="flex items-center bg-slate-900 p-0.5 rounded-xl border border-slate-800 text-xs font-bold">
                         <button
                           onClick={() => setHistoryStatusFilter('ALL')}
-                          className={`px-3 py-1 rounded-lg transition-all ${
-                            historyStatusFilter === 'ALL'
-                              ? 'bg-slate-800 text-white shadow-sm'
-                              : 'text-slate-400 hover:text-white'
-                          }`}
+                          className={`px-3 py-1 rounded-lg transition-all ${historyStatusFilter === 'ALL'
+                            ? 'bg-slate-800 text-white shadow-sm'
+                            : 'text-slate-400 hover:text-white'
+                            }`}
                         >
                           All Posts
                         </button>
                         <button
                           onClick={() => setHistoryStatusFilter('SENT')}
-                          className={`px-3 py-1 rounded-lg inline-flex items-center gap-1 transition-all ${
-                            historyStatusFilter === 'SENT'
-                              ? 'bg-emerald-600 text-white shadow-sm'
-                              : 'text-emerald-400 hover:text-white'
-                          }`}
+                          className={`px-3 py-1 rounded-lg inline-flex items-center gap-1 transition-all ${historyStatusFilter === 'SENT'
+                            ? 'bg-emerald-600 text-white shadow-sm'
+                            : 'text-emerald-400 hover:text-white'
+                            }`}
                         >
                           <Check className="w-3 h-3 stroke-[3]" />
                           ✓ SEND
                         </button>
                         <button
                           onClick={() => setHistoryStatusFilter('PENDING')}
-                          className={`px-3 py-1 rounded-lg inline-flex items-center gap-1 transition-all ${
-                            historyStatusFilter === 'PENDING'
-                              ? 'bg-amber-600 text-white shadow-sm'
-                              : 'text-amber-400 hover:text-white'
-                          }`}
+                          className={`px-3 py-1 rounded-lg inline-flex items-center gap-1 transition-all ${historyStatusFilter === 'PENDING'
+                            ? 'bg-amber-600 text-white shadow-sm'
+                            : 'text-amber-400 hover:text-white'
+                            }`}
                         >
                           <Clock className="w-3 h-3" />
                           ◷ PENDING
                         </button>
                         <button
                           onClick={() => setHistoryStatusFilter('FAILED')}
-                          className={`px-3 py-1 rounded-lg inline-flex items-center gap-1 transition-all ${
-                            historyStatusFilter === 'FAILED'
-                              ? 'bg-rose-600 text-white shadow-sm'
-                              : 'text-rose-400 hover:text-white'
-                          }`}
+                          className={`px-3 py-1 rounded-lg inline-flex items-center gap-1 transition-all ${historyStatusFilter === 'FAILED'
+                            ? 'bg-rose-600 text-white shadow-sm'
+                            : 'text-rose-400 hover:text-white'
+                            }`}
                         >
                           <X className="w-3 h-3 stroke-[3]" />
                           ✕ FAILED
@@ -8015,11 +7972,10 @@ ${trustedDescription || '[Description will appear here]'}
                         return (
                           <div
                             key={post.task_id}
-                            className={`rounded-2xl border p-4 sm:p-5 space-y-4 shadow-xl transition-all ${
-                              isCurrentSelected
-                                ? 'bg-slate-950/90 border-cyan-500/50 ring-1 ring-cyan-500/20'
-                                : 'bg-slate-950/70 border-slate-800/80 hover:border-slate-700'
-                            }`}
+                            className={`rounded-2xl border p-4 sm:p-5 space-y-4 shadow-xl transition-all ${isCurrentSelected
+                              ? 'bg-slate-950/90 border-cyan-500/50 ring-1 ring-cyan-500/20'
+                              : 'bg-slate-950/70 border-slate-800/80 hover:border-slate-700'
+                              }`}
                           >
                             {/* Post Header Card */}
                             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 pb-3.5 border-b border-slate-800/70">
@@ -8308,7 +8264,7 @@ ${trustedDescription || '[Description will appear here]'}
         </div>
       )}
 
-      
+
 
       {/* ======================================================== */}
       {/* MODAL 1: + NEW STATUS UPLOAD FORM MODAL */}
@@ -8339,11 +8295,10 @@ ${trustedDescription || '[Description will appear here]'}
 
             {/* Feedback alert */}
             {statusNotifSubmitFeedback && (
-              <div className={`p-4 rounded-2xl border text-xs font-bold flex items-center gap-2.5 ${
-                statusNotifSubmitFeedback.type === 'success'
-                  ? 'bg-emerald-950/80 border-emerald-500/40 text-emerald-300'
-                  : 'bg-rose-950/80 border-rose-500/40 text-rose-300'
-              }`}>
+              <div className={`p-4 rounded-2xl border text-xs font-bold flex items-center gap-2.5 ${statusNotifSubmitFeedback.type === 'success'
+                ? 'bg-emerald-950/80 border-emerald-500/40 text-emerald-300'
+                : 'bg-rose-950/80 border-rose-500/40 text-rose-300'
+                }`}>
                 {statusNotifSubmitFeedback.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
                 <span>{statusNotifSubmitFeedback.text}</span>
               </div>
@@ -8375,11 +8330,10 @@ ${trustedDescription || '[Description will appear here]'}
                     <button
                       type="button"
                       onClick={() => setStatusNotifContentType('image')}
-                      className={`py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all ${
-                        statusNotifContentType === 'image'
-                          ? 'bg-emerald-600 border-emerald-500 text-white shadow-md'
-                          : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
-                      }`}
+                      className={`py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all ${statusNotifContentType === 'image'
+                        ? 'bg-emerald-600 border-emerald-500 text-white shadow-md'
+                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                        }`}
                     >
                       <ImageIcon className="w-4 h-4" />
                       Image Status
@@ -8387,11 +8341,10 @@ ${trustedDescription || '[Description will appear here]'}
                     <button
                       type="button"
                       onClick={() => setStatusNotifContentType('video')}
-                      className={`py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all ${
-                        statusNotifContentType === 'video'
-                          ? 'bg-emerald-600 border-emerald-500 text-white shadow-md'
-                          : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
-                      }`}
+                      className={`py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all ${statusNotifContentType === 'video'
+                        ? 'bg-emerald-600 border-emerald-500 text-white shadow-md'
+                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                        }`}
                     >
                       <Film className="w-4 h-4" />
                       Video Status
@@ -8399,11 +8352,10 @@ ${trustedDescription || '[Description will appear here]'}
                     <button
                       type="button"
                       onClick={() => setStatusNotifContentType('text')}
-                      className={`py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all ${
-                        statusNotifContentType === 'text'
-                          ? 'bg-emerald-600 border-emerald-500 text-white shadow-md'
-                          : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
-                      }`}
+                      className={`py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all ${statusNotifContentType === 'text'
+                        ? 'bg-emerald-600 border-emerald-500 text-white shadow-md'
+                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                        }`}
                     >
                       <FileText className="w-4 h-4" />
                       Text Status
@@ -8501,9 +8453,8 @@ ${trustedDescription || '[Description will appear here]'}
                           key={col}
                           type="button"
                           onClick={() => setStatusNotifBgColor(col)}
-                          className={`w-6 h-6 rounded-full border-2 transition-all ${
-                            statusNotifBgColor === col ? 'border-white scale-110 shadow-md' : 'border-transparent'
-                          }`}
+                          className={`w-6 h-6 rounded-full border-2 transition-all ${statusNotifBgColor === col ? 'border-white scale-110 shadow-md' : 'border-transparent'
+                            }`}
                           style={{ backgroundColor: col }}
                         />
                       ))}
@@ -8675,11 +8626,10 @@ ${trustedDescription || '[Description will appear here]'}
                         key={f}
                         type="button"
                         onClick={() => setStatusNotifFrequency(f)}
-                        className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all ${
-                          statusNotifFrequency === f
-                            ? 'bg-emerald-600 border-emerald-500 text-white shadow-md'
-                            : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
-                        }`}
+                        className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all ${statusNotifFrequency === f
+                          ? 'bg-emerald-600 border-emerald-500 text-white shadow-md'
+                          : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                          }`}
                       >
                         {f}x / Day
                       </button>
@@ -8730,11 +8680,10 @@ ${trustedDescription || '[Description will appear here]'}
                           setStatusNotifDurationHours(h);
                           setStatusNotifCustomDuration(h.toString());
                         }}
-                        className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all ${
-                          statusNotifDurationHours === h
-                            ? 'bg-emerald-600 border-emerald-500 text-white shadow-md'
-                            : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
-                        }`}
+                        className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all ${statusNotifDurationHours === h
+                          ? 'bg-emerald-600 border-emerald-500 text-white shadow-md'
+                          : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                          }`}
                       >
                         {h} {h === 1 ? 'Hour' : 'Hours'}
                       </button>
@@ -8812,8 +8761,8 @@ ${trustedDescription || '[Description will appear here]'}
                     {isSubmittingStatusNotif
                       ? 'Publishing Status...'
                       : statusNotifSelectedGroups.length > 0
-                      ? 'Add / Publish Status & Notify Groups'
-                      : 'Add / Publish Status (My Status Only)'}
+                        ? 'Add / Publish Status & Notify Groups'
+                        : 'Add / Publish Status (My Status Only)'}
                   </span>
                 </button>
               </div>
@@ -8910,11 +8859,10 @@ ${trustedDescription || '[Description will appear here]'}
                           setTempTaggedGroups((prev) => [...prev, grp.jid]);
                         }
                       }}
-                      className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all border select-none ${
-                        isSelected
-                          ? 'bg-indigo-950/40 border-indigo-500/60 ring-1 ring-indigo-500/40 shadow-sm'
-                          : 'bg-slate-950/60 border-slate-800/80 hover:bg-slate-900 hover:border-slate-700'
-                      }`}
+                      className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all border select-none ${isSelected
+                        ? 'bg-indigo-950/40 border-indigo-500/60 ring-1 ring-indigo-500/40 shadow-sm'
+                        : 'bg-slate-950/60 border-slate-800/80 hover:bg-slate-900 hover:border-slate-700'
+                        }`}
                     >
                       <div className="flex items-center gap-3 min-w-0 pr-2">
                         <input
@@ -8960,9 +8908,8 @@ ${trustedDescription || '[Description will appear here]'}
                       {/* Member count & badge */}
                       <div className="text-right shrink-0 space-y-0.5">
                         <span className="text-[10px] font-mono text-slate-400 block">{memberCount}</span>
-                        <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
-                          isSelected ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' : 'bg-slate-800 text-slate-500'
-                        }`}>
+                        <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${isSelected ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' : 'bg-slate-800 text-slate-500'
+                          }`}>
                           {isSelected ? 'Tagged' : 'Untagged'}
                         </span>
                       </div>
@@ -9285,11 +9232,10 @@ ${trustedDescription || '[Description will appear here]'}
                         <tr key={del.group_id || idx} className="hover:bg-slate-800/40">
                           <td className="p-3 text-white font-sans font-bold">{del.group_name || del.group_id}</td>
                           <td className="p-3">
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                              del.status === 'SENT' ? 'bg-emerald-500/15 text-emerald-400' :
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${del.status === 'SENT' ? 'bg-emerald-500/15 text-emerald-400' :
                               del.status === 'FAILED' ? 'bg-rose-500/15 text-rose-400' :
-                              'bg-amber-500/15 text-amber-400'
-                            }`}>
+                                'bg-amber-500/15 text-amber-400'
+                              }`}>
                               {del.status}
                             </span>
                           </td>
