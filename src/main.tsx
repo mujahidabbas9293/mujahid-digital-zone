@@ -9,8 +9,10 @@ if (typeof window !== 'undefined') {
     try {
       let urlStr = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
       
-      // Determine production backend base URL
-      const customBackend = (import.meta.env.VITE_API_URL || localStorage.getItem('mdz_custom_backend_url') || '').trim();
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const defaultBackend = isLocalhost ? '' : 'https://mujahid-digital-zone.onrender.com';
+      const customBackend = (import.meta.env.VITE_API_URL || localStorage.getItem('mdz_custom_backend_url') || defaultBackend).trim();
+
       if (customBackend && urlStr.startsWith('/api/')) {
         urlStr = customBackend.replace(/\/$/, '') + urlStr;
         input = urlStr;
