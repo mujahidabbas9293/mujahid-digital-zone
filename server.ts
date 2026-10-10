@@ -3808,12 +3808,12 @@ export async function initCustomerBaileys(customerId: string, forceReset = false
         } catch (err: any) {
           attempts++;
           console.warn(`[WHATSAPP_CENTER] Failed to generate pairing code for ${safeId} (attempt ${attempts}):`, err?.message || err);
-          if (attempts < 4 && String(err?.message || err).includes('Closed')) {
-            setTimeout(tryGeneratePairingCode, 2000);
+          if (attempts < 8) {
+            setTimeout(tryGeneratePairingCode, 1200);
           }
         }
       };
-      setTimeout(tryGeneratePairingCode, 2000);
+      setTimeout(tryGeneratePairingCode, 500);
     }
 
     sock.ev.on('creds.update', async () => {
@@ -4814,11 +4814,12 @@ async function startServer() {
     const session = getOrCreateCustomerSession(customerId);
     session.manualUnlink = false;
     session.store.manualUnlink = false;
+    session.pairingCode = '';
     await initCustomerBaileys(customerId, true, targetPhone);
 
-    // Wait up to 3.5 seconds for Baileys to produce the 8-digit pairing code
+    // Wait up to 10 seconds for Baileys to produce the 8-digit pairing code
     let pairingCode = session.pairingCode || null;
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 20; i++) {
       if (session.pairingCode) {
         pairingCode = session.pairingCode;
         break;
@@ -4826,11 +4827,18 @@ async function startServer() {
       await new Promise(r => setTimeout(r, 500));
     }
 
+    if (!pairingCode) {
+      return res.status(500).json({
+        success: false,
+        error: 'WhatsApp pairing code generation timed out. Please click "Get Code" again or scan QR code.'
+      });
+    }
+
     return res.json({
       success: true,
       pairingCode: pairingCode,
       code: pairingCode,
-      message: pairingCode ? `Pairing code generated: ${pairingCode}` : 'Pairing requested'
+      message: `Pairing code generated: ${pairingCode}`
     });
   };
 

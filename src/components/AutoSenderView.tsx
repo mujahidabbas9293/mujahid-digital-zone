@@ -983,8 +983,20 @@ export const AutoSenderView: React.FC = () => {
       if (!res.ok) {
         setPairingError(data?.error || 'Failed to generate WhatsApp pairing code.');
       } else {
+        const code = data?.pairingCode || data?.code || null;
+        if (code) {
+          setStatus(prev => prev ? { ...prev, pairingCode: code } : {
+            status: 'WAITING_FOR_QR',
+            pairingCode: code,
+            socketStatusMessage: `Pairing code generated: ${code}`,
+            phone: '',
+            qrDataUrl: '',
+            connectedAt: null,
+            profile: null
+          } as any);
+        }
         await fetchStatusAndData(false);
-        const codeMsg = data?.pairingCode || data?.code ? `Pairing Code: ${data.pairingCode || data.code}` : 'Pairing code generated. Check WhatsApp on your phone.';
+        const codeMsg = code ? `Pairing Code: ${code}` : 'Pairing code generated. Check WhatsApp on your phone.';
         showNotification('success', codeMsg);
       }
     } catch (err: any) {
