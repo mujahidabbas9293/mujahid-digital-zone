@@ -344,6 +344,7 @@ export const AutoSenderView: React.FC = () => {
   const [pairingPhone, setPairingPhone] = useState<string>('');
   const [isPairingLoading, setIsPairingLoading] = useState<boolean>(false);
   const [pairingError, setPairingError] = useState<string | null>(null);
+  const [serverConnectionError, setServerConnectionError] = useState<string | null>(null);
   const [isUnlinking, setIsUnlinking] = useState<boolean>(false);
   const [countdown, setCountdown] = useState<number>(60);
   const [autoRefreshQr, setAutoRefreshQr] = useState<boolean>(true);
@@ -850,9 +851,9 @@ export const AutoSenderView: React.FC = () => {
     if (isInitial) setLoading(true);
     try {
       const [statusRes, groupsRes, tasksRes, scamRes, trustedRes, historyRes, statusNotifsRes, myStatusRes] = await Promise.all([
-        apiFetch('/api/auto-sender/status'),
-        apiFetch('/api/auto-sender/groups'),
-        apiFetch('/api/auto-sender/tasks'),
+        apiFetch('/api/auto-sender/status').catch(err => ({ ok: false, status: 0, error: err?.message || 'Unreachable' })),
+        apiFetch('/api/auto-sender/groups').catch(() => null),
+        apiFetch('/api/auto-sender/tasks').catch(() => null),
         apiFetch('/api/auto-sender/scam-reports').catch(() => null),
         apiFetch('/api/auto-sender/trusted-posts').catch(() => null),
         apiFetch('/api/auto-sender/history').catch(() => null),
@@ -860,9 +861,12 @@ export const AutoSenderView: React.FC = () => {
         apiFetch('/api/auto-sender/my-statuses').catch(() => null)
       ]);
 
-      if (statusRes.ok) {
-        const statusData: AutoSenderStatus = await statusRes.json();
+      if (statusRes && (statusRes as Response).ok) {
+        setServerConnectionError(null);
+        const statusData: AutoSenderStatus = await (statusRes as Response).json();
         setStatus(statusData);
+      } else {
+        setServerConnectionError('Backend server unreachable or host not set. Click top-right 🌐 Server URL to configure host URL.');
       }
 
       if (groupsRes.ok) {
@@ -5882,6 +5886,19 @@ export const AutoSenderView: React.FC = () => {
       {/* --- TAB: WHATSAPP CONNECTION --- */}
       {activeTab === 'connection' && (
         <div className="max-w-5xl mx-auto space-y-6">
+          {serverConnectionError && !isConnected && (
+            <div className="p-4 bg-amber-950/40 border border-amber-500/40 rounded-xl text-left flex items-start gap-3 text-xs text-amber-300">
+              <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <span className="font-bold block text-amber-200">Backend Server Connection Required</span>
+                <p className="mt-0.5 text-amber-300/90">{serverConnectionError}</p>
+                <p className="mt-1 text-[11px] text-amber-400 font-mono">
+                  If running locally on your PC, open <a href="http://localhost:3000" className="underline font-bold text-white">http://localhost:3000</a> directly or click top-right 🌐 Server URL to enter your active server address.
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-slate-900 border border-slate-800 p-5 rounded-2xl">
             <div className="flex items-center gap-3">
               <div className={`w-3.5 h-3.5 rounded-full ${isConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
