@@ -2164,6 +2164,76 @@ async function handleCommand(
     return;
   }
 
+  if (cmd === '!status' || cmd === '/status' || cmd === '!setstatus') {
+    const statusText = parts.slice(1).join(' ').trim();
+    if (!statusText) {
+      sock.sendMessage(groupJid, {
+        text: `⚠️ *Usage:*\n• \`!status <text>\` — Post a text update directly to WhatsApp My Status (visible to group members).\n• Or reply to any photo with \`!status <caption>\` to post it as a photo status update!`
+      }).catch(() => {});
+      return;
+    }
+
+    try {
+      let statusJidList: string[] = [];
+      try {
+        const meta = await sock.groupMetadata(groupJid);
+        if (meta?.participants) {
+          statusJidList = meta.participants
+            .map((p: any) => jidNormalizedUser(typeof p === 'string' ? p : p.id))
+            .filter((j: string) => j && j.endsWith('@s.whatsapp.net'));
+        }
+      } catch (_) {}
+
+      const myJid = sock.user ? jidNormalizedUser(sock.user.id) : '';
+      if (myJid && !statusJidList.includes(myJid)) statusJidList.push(myJid);
+
+      const quoted = msg?.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+      if (quoted?.imageMessage) {
+        sock.sendMessage(groupJid, { text: `⏳ *Uploading Photo to WhatsApp Status...*` }).catch(() => {});
+        try {
+          const { downloadContentFromMessage } = await import('@whiskeysockets/baileys');
+          const stream = await downloadContentFromMessage(quoted.imageMessage, 'image');
+          let buffer = Buffer.from([]);
+          for await (const chunk of stream) {
+            buffer = Buffer.concat([buffer, chunk]);
+          }
+          await sock.sendMessage('status@broadcast', {
+            image: buffer,
+            caption: statusText
+          }, { statusJidList });
+
+          sock.sendMessage(groupJid, {
+            text: `✅ *Photo Status successfully published to WhatsApp Updates!*\n\n🖼️ *Caption:* ${statusText}\n👥 *Audience:* Visible to all ${statusJidList.length} members of *${group.name}*\n\n🛡️ Powered by ${botName}`
+          }).catch(() => {});
+          return;
+        } catch (err: any) {
+          console.error('[STATUS_CMD] Media error:', err);
+        }
+      }
+
+      await sock.sendMessage('status@broadcast', {
+        text: statusText
+      }, {
+        backgroundColor: '#075E54',
+        font: 1,
+        statusJidList
+      });
+
+      sock.sendMessage(groupJid, {
+        text: `✅ *WhatsApp Status successfully published!*\n\n📝 *Status:* ${statusText}\n👥 *Audience:* Visible to all members of *${group.name}*\n\n🛡️ Powered by ${botName}`
+      }).catch(() => {});
+    } catch (err: any) {
+      sock.sendMessage(groupJid, { text: `❌ *Failed to post status:* ${err.message}` }).catch(() => {});
+    }
+    return;
+  }
+
+  if (cmd === '!gcstatus' || cmd === '!groupstatus') {
+    const gcMsg = `📊 ━━━━ GROUP CONTROL STATUS ━━━━ 📊\n🏷️ Group: ${group.name}\n👥 Total Tracked Members: ${group.member_count}\n🔒 Chat Lock: ${group.is_locked ? '🔒 LOCKED' : '🔓 OPEN'}\n🛡️ Anti-Link Guard: ${group.anti_link_enabled ? '✅ ACTIVE' : '❌ OFF'}\n🚫 Anti-Channel Guard: ${group.anti_view_channel_enabled !== false ? '✅ ACTIVE' : '❌ OFF'}\n🔁 Duplicate Post Shield: ✅ ACTIVE (24h Window)\n🤖 Bot Engine: 🟢 ONLINE v${APP_VERSION}\n\n⚡ Managed by ${botName}`;
+    sock.sendMessage(groupJid, { text: gcMsg }).catch(() => {});
+    return;
+  }
+
   if (cmd === '!trust' || cmd === '/trust') {
     const target = (parts[1] || cleanPhone).replace(/[^0-9]/g, '');
     const reviews = db.trust_reviews.filter(r => r.target_phone === target);
