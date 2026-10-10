@@ -8,6 +8,7 @@
     "build": "vite build",
     "start": "tsx server.ts",
     "sync": "node scripts/sync-repo.cjs",
+    "deploy:production": "node scripts/deploy-production.cjs",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
