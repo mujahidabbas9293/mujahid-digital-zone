@@ -345,6 +345,18 @@ export const AutoSenderView: React.FC = () => {
   const [isPairingLoading, setIsPairingLoading] = useState<boolean>(false);
   const [pairingError, setPairingError] = useState<string | null>(null);
   const [isUnlinking, setIsUnlinking] = useState<boolean>(false);
+  const [countdown, setCountdown] = useState<number>(60);
+  const [autoRefreshQr, setAutoRefreshQr] = useState<boolean>(true);
+  const [copiedPairingCode, setCopiedPairingCode] = useState<boolean>(false);
+
+  const handleCopyPairingCode = () => {
+    if (!status?.pairingCode) return;
+    try {
+      navigator.clipboard.writeText(status.pairingCode);
+    } catch (_) {}
+    setCopiedPairingCode(true);
+    setTimeout(() => setCopiedPairingCode(false), 3000);
+  };
 
   // Complete Status Selection
   const [selectedTaskIdForStatus, setSelectedTaskIdForStatus] = useState<string | null>(null);
@@ -5869,112 +5881,212 @@ export const AutoSenderView: React.FC = () => {
 
       {/* --- TAB: WHATSAPP CONNECTION --- */}
       {activeTab === 'connection' && (
-        <div className="max-w-2xl mx-auto space-y-6">
-          <div className="text-center space-y-2">
-            <h2 className="text-2xl font-black text-white">WhatsApp Sender Auto Post Connection</h2>
-            <p className="text-xs sm:text-sm text-slate-400">
-              Scan QR code with your mobile WhatsApp or generate an 8-digit Pairing Code for permanent 24/7 cloud sync.
-            </p>
-          </div>
-
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 text-center">
-            {isConnected ? (
-              <div className="space-y-4">
-                <div className="w-16 h-16 rounded-3xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mx-auto text-2xl font-bold shadow-xl">
-                  ✓
-                </div>
-                <h3 className="text-xl font-bold text-white">WhatsApp Auto Sender is Connected</h3>
-                <p className="text-xs text-slate-400">
-                  Connected as <span className="font-bold text-emerald-400">{status?.name}</span> (+{status?.phone}). Background worker is running continuously.
+        <div className="max-w-5xl mx-auto space-y-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-slate-900 border border-slate-800 p-5 rounded-2xl">
+            <div className="flex items-center gap-3">
+              <div className={`w-3.5 h-3.5 rounded-full ${isConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
+              <div>
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  WhatsApp Connection Status:
+                  <span className={isConnected ? 'text-emerald-400' : 'text-amber-400'}>
+                    {isConnected ? 'ONLINE & CONNECTED' : (status?.socketStatusMessage || 'Awaiting Connection')}
+                  </span>
+                </h3>
+                <p className="text-xs text-slate-400 font-mono">
+                  {isConnected ? `Linked Account: +${status?.phone || status?.name || 'Active'}` : 'No WhatsApp Connection. Connect WhatsApp to continue.'}
                 </p>
-                <div className="pt-4 flex justify-center gap-3">
-                  <button
-                    onClick={handleOpenNewPostForm}
-                    className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-lg"
-                  >
-                    Create Auto Post
-                  </button>
-                  <button
-                    onClick={handleUnlink}
-                    className="px-6 py-3 bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/30 rounded-xl text-xs font-bold"
-                  >
-                    Unlink Device
-                  </button>
-                </div>
               </div>
-            ) : (status?.qrDataUrl || isQrAvailable) && status?.qrDataUrl ? (
-              <div className="space-y-4">
-                <div className="p-4 bg-white rounded-3xl inline-block shadow-2xl border-4 border-slate-800">
-                  <img src={status.qrDataUrl} alt="WhatsApp QR" className="w-56 h-56 sm:w-64 sm:h-64 object-contain" />
-                </div>
-                <p className="text-xs text-slate-400">
-                  Open WhatsApp on your phone &gt; Linked Devices &gt; Link a Device and point your camera here.
-                </p>
-                <div className="flex justify-center gap-3">
-                  <button
-                    onClick={handleRefreshQr}
-                    disabled={refreshing}
-                    className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-lg inline-flex items-center gap-2 cursor-pointer"
-                  >
-                    <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-                    {refreshing ? 'Refreshing...' : 'Refresh QR Code'}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4 py-8">
-                <div className="w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-400 mx-auto animate-spin">
-                  <RefreshCw className="w-6 h-6 text-emerald-400" />
-                </div>
-                <h3 className="text-base font-bold text-white">Initializing WhatsApp Socket...</h3>
-                <p className="text-xs text-slate-400">
-                  Preparing secure multi-device session on VPS cloud server. Please wait a few seconds.
-                </p>
-                <div className="pt-2 flex justify-center gap-3">
-                  <button
-                    onClick={handleRefreshQr}
-                    disabled={refreshing}
-                    className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-lg inline-flex items-center gap-2 cursor-pointer"
-                  >
-                    <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-                    {refreshing ? 'Generating QR...' : 'Generate Live QR Code'}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Pairing Code Section */}
+            </div>
             {!isConnected && (
-              <div className="pt-6 border-t border-slate-800/80 space-y-3 text-left">
-                <span className="text-xs font-bold text-slate-300 uppercase tracking-wider block">
-                  Or Connect with WhatsApp Phone Pairing Code
-                </span>
-                <form onSubmit={handleRequestPairingCode} className="flex gap-2">
-                  <input
-                    type="text"
-                    value={pairingPhone}
-                    onChange={(e) => setPairingPhone(e.target.value)}
-                    placeholder="Enter phone with country code (e.g. 923176080744)"
-                    className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 font-mono"
-                  />
-                  <button
-                    type="submit"
-                    disabled={isPairingLoading}
-                    className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50"
-                  >
-                    {isPairingLoading ? 'Requesting...' : 'Get Code'}
-                  </button>
-                </form>
-                {status?.pairingCode && (
-                  <div className="p-4 bg-emerald-950/40 border border-emerald-500/40 rounded-2xl text-center space-y-1">
-                    <span className="text-[10px] text-emerald-400 uppercase font-bold block">Enter this code in WhatsApp notification:</span>
-                    <span className="text-2xl font-mono font-black text-white tracking-widest">{status.pairingCode}</span>
-                  </div>
-                )}
-                {pairingError && <p className="text-xs text-rose-400">{pairingError}</p>}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleRefreshQr}
+                  disabled={refreshing}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs text-white font-bold rounded-xl border border-slate-700 flex items-center gap-2 transition-all cursor-pointer"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+                  Generate New QR
+                </button>
               </div>
             )}
           </div>
+
+          {isConnected ? (
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 text-center">
+              <div className="w-16 h-16 rounded-3xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mx-auto text-2xl font-bold shadow-xl">
+                ✓
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-xl font-black text-white">WhatsApp Auto Sender is Connected</h3>
+                <p className="text-xs text-slate-400">
+                  Connected as <span className="font-bold text-emerald-400">{status?.name || 'WhatsApp Session'}</span> (+{status?.phone || status?.customer_id}). Background worker is running 24/7.
+                </p>
+                <p className="text-[11px] font-mono text-emerald-400 pt-1">
+                  Live Server Time: {liveDateStr}
+                </p>
+              </div>
+
+              {/* Connected Account Stats Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left pt-2">
+                <div className="p-4 bg-slate-950/60 border border-slate-800 rounded-2xl">
+                  <span className="text-[10px] font-bold uppercase text-slate-400 block">Eligible Groups</span>
+                  <span className="text-2xl font-black text-white">{accountStats.totalEligibleGroups}</span>
+                </div>
+                <div className="p-4 bg-slate-950/60 border border-slate-800 rounded-2xl">
+                  <span className="text-[10px] font-bold uppercase text-slate-400 block">Active Schedules</span>
+                  <span className="text-2xl font-black text-emerald-400">{accountStats.activeSchedules}</span>
+                </div>
+                <div className="p-4 bg-slate-950/60 border border-slate-800 rounded-2xl">
+                  <span className="text-[10px] font-bold uppercase text-slate-400 block">Total Posts Sent</span>
+                  <span className="text-2xl font-black text-blue-400">{accountStats.totalPostsSent}</span>
+                </div>
+              </div>
+
+              <div className="pt-4 flex justify-center gap-3">
+                <button
+                  onClick={handleOpenNewPostForm}
+                  className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-600/20 cursor-pointer"
+                >
+                  Create Auto Post
+                </button>
+                <button
+                  onClick={handleUnlink}
+                  disabled={isUnlinking}
+                  className="px-6 py-3 bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/30 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                >
+                  {isUnlinking ? 'Unlinking...' : 'Unlink Device'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
+              {/* Method 1: QR Code */}
+              <div className="bg-slate-900 rounded-2xl border border-slate-800 p-6 flex flex-col justify-between shadow-xl">
+                <div>
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                    <div className="flex items-center space-x-2.5">
+                      <QrCode className="w-5 h-5 text-emerald-400" />
+                      <h3 className="text-sm font-bold text-white">Method 1: Scan WhatsApp Web QR</h3>
+                    </div>
+                    <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full flex items-center gap-1 font-semibold">
+                      <Zap className="w-3 h-3 text-emerald-400 animate-pulse" />
+                      Auto-Refresh in {countdown}s
+                    </span>
+                  </div>
+
+                  <div className="mt-5 flex flex-col items-center justify-center">
+                    {status?.qrDataUrl ? (
+                      <div className="p-3 bg-white rounded-xl shadow-lg border border-slate-200 flex flex-col items-center">
+                        <img
+                          src={status.qrDataUrl}
+                          alt="WhatsApp Web QR Code"
+                          className="w-56 h-56 object-contain"
+                        />
+                        <div className="text-[11px] text-slate-600 font-mono mt-2 font-medium flex items-center gap-2">
+                          <span>Expires in: {countdown}s</span>
+                          <span className="text-slate-400">•</span>
+                          <span className="text-emerald-600 font-bold flex items-center gap-1">
+                            <RefreshCw className={`w-2.5 h-2.5 ${refreshing ? 'animate-spin' : ''}`} />
+                            Next: {countdown}s
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="w-56 h-56 rounded-xl bg-slate-800/40 border border-dashed border-slate-700 flex flex-col items-center justify-center text-center p-4">
+                        <RefreshCw className="w-8 h-8 text-emerald-400 animate-spin mb-3" />
+                        <span className="text-xs font-bold text-white">Initializing WhatsApp Socket...</span>
+                        <span className="text-[10px] text-slate-400 mt-1">Preparing secure multi-device session on VPS cloud server.</span>
+                        <button
+                          onClick={handleRefreshQr}
+                          disabled={refreshing}
+                          className="mt-3 px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold shadow-md cursor-pointer"
+                        >
+                          {refreshing ? 'Generating...' : 'Generate Live QR'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-5 text-xs text-slate-400 space-y-1.5 bg-slate-950/40 p-3 rounded-lg border border-slate-800">
+                    <div className="font-semibold text-slate-300">How to link:</div>
+                    <ol className="list-decimal list-inside space-y-1 text-slate-400 text-[11px]">
+                      <li>Open WhatsApp on phone</li>
+                      <li>Tap <b>Linked Devices</b> &gt; <b>Link a Device</b></li>
+                      <li>Scan this code to link 24/7 background worker</li>
+                    </ol>
+                  </div>
+                </div>
+              </div>
+
+              {/* Method 2: Pairing Code */}
+              <div className="bg-slate-900 rounded-2xl border border-slate-800 p-6 flex flex-col justify-between shadow-xl">
+                <div>
+                  <div className="flex items-center space-x-2.5 pb-3 border-b border-slate-800">
+                    <Smartphone className="w-5 h-5 text-emerald-400" />
+                    <h3 className="text-sm font-bold text-white">Method 2: 8-Digit Pairing Code</h3>
+                  </div>
+
+                  <p className="text-xs text-slate-400 mt-3 leading-relaxed">
+                    Enter your WhatsApp phone number with country code (e.g., <code className="text-emerald-400 font-mono">923001234567</code>) to link directly without camera.
+                  </p>
+
+                  <form onSubmit={handleRequestPairingCode} className="mt-4 space-y-3">
+                    <div>
+                      <label className="block text-xs font-medium text-slate-300 mb-1">
+                        Phone Number (with Country Code)
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={pairingPhone}
+                          onChange={(e) => setPairingPhone(e.target.value)}
+                          placeholder="e.g. 923001234567"
+                          disabled={isPairingLoading}
+                          className="flex-1 px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
+                        />
+                        <button
+                          type="submit"
+                          disabled={isPairingLoading || !pairingPhone.trim()}
+                          className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-slate-950 font-bold text-xs rounded-xl transition-all cursor-pointer shadow-md"
+                        >
+                          {isPairingLoading ? 'Requesting...' : 'Get Code'}
+                        </button>
+                      </div>
+                    </div>
+                  </form>
+
+                  {pairingError && <p className="mt-2 text-xs text-rose-400">{pairingError}</p>}
+
+                  {status?.pairingCode && (
+                    <div className="mt-5 p-4 bg-emerald-950/20 border border-emerald-500/40 rounded-xl text-center">
+                      <div className="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider">
+                        Official WhatsApp Pairing Code
+                      </div>
+                      <div className="text-3xl font-extrabold text-white font-mono tracking-widest my-2 select-all tabular-nums">
+                        {status.pairingCode}
+                      </div>
+                      <button
+                        onClick={handleCopyPairingCode}
+                        className="inline-flex items-center space-x-1.5 px-3 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 text-xs font-semibold rounded-md border border-emerald-500/30 transition-all cursor-pointer"
+                      >
+                        {copiedPairingCode ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                        <span>{copiedPairingCode ? 'Copied!' : 'Copy Code'}</span>
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="mt-5 text-xs text-slate-400 space-y-1.5 bg-slate-950/40 p-3 rounded-lg border border-slate-800">
+                    <div className="font-semibold text-slate-300">How to enter code on WhatsApp:</div>
+                    <ol className="list-decimal list-inside space-y-1 text-slate-400 text-[11px]">
+                      <li>Open WhatsApp &gt; <b>Linked Devices</b> &gt; <b>Link a Device</b></li>
+                      <li>Tap <b>Link with phone number instead</b></li>
+                      <li>Type the 8-digit code shown above</li>
+                    </ol>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
