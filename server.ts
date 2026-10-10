@@ -12,7 +12,8 @@ import makeWASocket, {
   DisconnectReason,
   jidNormalizedUser,
   fetchLatestBaileysVersion,
-  Browsers
+  Browsers,
+  downloadContentFromMessage
 } from '@whiskeysockets/baileys';
 import pino from 'pino';
 import * as XLSX from 'xlsx';
@@ -36,6 +37,7 @@ const CENTER_SESSION_DIR = path.join(DATA_DIR, 'whatsapp_center_session');
 const CENTER_STORE_FILE = path.join(DATA_DIR, 'whatsapp_center_store.json');
 const AUTO_SENDER_SESSION_DIR = path.join(DATA_DIR, 'auto_sender_session');
 const AUTO_SENDER_STORE_FILE = path.join(DATA_DIR, 'auto_sender_store.json');
+const GROUP_STATUS_SETTINGS_FILE = path.join(DATA_DIR, 'group_status_settings.json');
 const RESELLER_STORE_FILE = path.join(DATA_DIR, 'reseller_licenses.json');
 const CUSTOMERS_STORE_FILE = path.join(DATA_DIR, 'customers_store.json');
 const UPLOADS_DIR = path.join(DATA_DIR, 'uploads');
@@ -756,6 +758,9 @@ function saveDb() {
   }
 }
 
+
+
+
 function addLog(level: string, event_type: string, details: string, meta?: any) {
   db.activity_logs.unshift({
     id: `act-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
@@ -1174,6 +1179,339 @@ async function enrichMemberProfilesInBackground(sock: WASocket, scope: Connectio
   saveDb();
 }
 
+let autoSenderSession: any = null;
+
+// ----------------------------------------------------
+// GROUP STATUS & .gcstatus AUDIENCE ENGINE
+// ----------------------------------------------------
+export interface GroupStatusSettings {
+  enabled: boolean;
+  target_mode: 'ALL_GROUPS' | 'SELECTED_GROUPS' | 'EXCLUDE_GROUPS';
+  selected_group_jids: string[];
+  excluded_group_jids: string[];
+  background_color?: string;
+  font?: number;
+}
+
+function getGroupStatusSettings(): GroupStatusSettings {
+  try {
+    if (fs.existsSync(GROUP_STATUS_SETTINGS_FILE)) {
+      const data = JSON.parse(fs.readFileSync(GROUP_STATUS_SETTINGS_FILE, 'utf-8'));
+      return {
+        enabled: data.enabled !== false,
+        target_mode: data.target_mode === 'SELECTED_GROUPS' ? 'SELECTED_GROUPS' : data.target_mode === 'EXCLUDE_GROUPS' ? 'EXCLUDE_GROUPS' : 'ALL_GROUPS',
+        selected_group_jids: Array.isArray(data.selected_group_jids) ? data.selected_group_jids : [],
+        excluded_group_jids: Array.isArray(data.excluded_group_jids) ? data.excluded_group_jids : [],
+        background_color: data.background_color || '#075E54',
+        font: typeof data.font === 'number' ? data.font : 1
+      };
+    }
+  } catch (err) {
+    console.error('[GROUP_STATUS] Error reading settings file:', err);
+  }
+  return {
+    enabled: true,
+    target_mode: 'ALL_GROUPS',
+    selected_group_jids: [],
+    excluded_group_jids: [],
+    background_color: '#075E54',
+    font: 1
+  };
+}
+
+function saveGroupStatusSettings(settings: Partial<GroupStatusSettings>): GroupStatusSettings {
+  const current = getGroupStatusSettings();
+  const updated: GroupStatusSettings = {
+    enabled: typeof settings.enabled === 'boolean' ? settings.enabled : current.enabled,
+    target_mode: settings.target_mode === 'SELECTED_GROUPS' ? 'SELECTED_GROUPS' : settings.target_mode === 'EXCLUDE_GROUPS' ? 'EXCLUDE_GROUPS' : 'ALL_GROUPS',
+    selected_group_jids: Array.isArray(settings.selected_group_jids) ? settings.selected_group_jids : current.selected_group_jids,
+    excluded_group_jids: Array.isArray(settings.excluded_group_jids) ? settings.excluded_group_jids : current.excluded_group_jids,
+    background_color: settings.background_color || current.background_color || '#075E54',
+    font: typeof settings.font === 'number' ? settings.font : (current.font || 1)
+  };
+  try {
+    fs.writeFileSync(GROUP_STATUS_SETTINGS_FILE, JSON.stringify(updated, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('[GROUP_STATUS] Error writing settings file:', err);
+  }
+  return updated;
+}
+
+function getUnifiedGroupsList(): Array<{ jid: string; name: string; member_count: number; icon_url?: string | null }> {
+  const map = new Map<string, { jid: string; name: string; member_count: number; icon_url?: string | null }>();
+  if (autoSenderSession?.store?.groups && Array.isArray(autoSenderSession.store.groups)) {
+    for (const g of autoSenderSession.store.groups) {
+      if (g && g.jid) {
+        map.set(g.jid, {
+          jid: g.jid,
+          name: g.name || 'WhatsApp Group',
+          member_count: g.member_count || (Array.isArray(g.members) ? g.members.length : 0),
+          icon_url: g.icon_url || null
+        });
+      }
+    }
+  }
+  if (db?.groups && Array.isArray(db.groups)) {
+    for (const g of db.groups) {
+      if (g && g.jid && !map.has(g.jid)) {
+        map.set(g.jid, {
+          jid: g.jid,
+          name: g.name || 'WhatsApp Group',
+          member_count: g.member_count || 0,
+          icon_url: (g as any).icon_url || null
+        });
+      }
+    }
+  }
+  return Array.from(map.values());
+}
+
+function getActiveWASocket(): WASocket | null {
+  if (autoSenderSession?.sock && (autoSenderSession.status === 'CONNECTED' || autoSenderSession.status === 'READY')) {
+    return autoSenderSession.sock;
+  }
+  if (autoSenderSession?.sock) {
+    return autoSenderSession.sock;
+  }
+  if (waSocket) {
+    return waSocket;
+  }
+  return null;
+}
+
+async function executeGcStatusPublish(
+  activeSock?: WASocket | null,
+  remoteJid?: string,
+  commandText?: string,
+  msg?: any,
+  overrideOptions?: {
+    customText?: string;
+    mediaUrl?: string;
+    mediaType?: 'text' | 'image' | 'video';
+    bgColor?: string;
+    font?: number;
+    targetMode?: 'ALL_GROUPS' | 'SELECTED_GROUPS' | 'EXCLUDE_GROUPS';
+    selectedGroupJids?: string[];
+  }
+) {
+  const targetSock = activeSock || getActiveWASocket();
+  if (!targetSock) {
+    console.warn('[GC_STATUS] Cannot publish status: No WhatsApp socket connected.');
+    throw new Error('No WhatsApp socket connected. Please connect WhatsApp first.');
+  }
+
+  const parts = (commandText || '').trim().split(/\s+/);
+  const rawExtraText = overrideOptions?.customText || parts.slice(1).join(' ').trim();
+  // Strip command name if present
+  const extraText = rawExtraText.replace(/^(\.gcstatus|!gcstatus|\/gcstatus)\s*/i, '').trim();
+  const botName = db?.settings?.bot_name || 'Mujahid Digital Zone Bot';
+  const groupSettings = getGroupStatusSettings();
+
+  try {
+    // 1. Determine Target Groups Audience
+    let targetGroupJids: string[] = [];
+    const allAvailableGroups = getUnifiedGroupsList();
+    const targetMode = overrideOptions?.targetMode || groupSettings.target_mode;
+    const selectedJids = overrideOptions?.selectedGroupJids || groupSettings.selected_group_jids || [];
+    const excludedJids = groupSettings.excluded_group_jids || [];
+
+    if (targetMode === 'SELECTED_GROUPS' && selectedJids.length > 0) {
+      targetGroupJids = selectedJids;
+    } else if (targetMode === 'EXCLUDE_GROUPS') {
+      targetGroupJids = allAvailableGroups.map(g => g.jid).filter(jid => !excludedJids.includes(jid));
+    } else {
+      // ALL_GROUPS mode: target all connected groups
+      targetGroupJids = allAvailableGroups.map(g => g.jid);
+    }
+
+    // Collect audience members across target groups
+    const statusJidSet = new Set<string>();
+    const myJid = targetSock.user ? jidNormalizedUser(targetSock.user.id) : '';
+    if (myJid) statusJidSet.add(myJid);
+
+    for (const gid of targetGroupJids) {
+      try {
+        const meta = await targetSock.groupMetadata(gid).catch(() => null);
+        if (meta?.participants) {
+          for (const p of meta.participants) {
+            const pId = typeof p === 'string' ? p : p.id;
+            const norm = jidNormalizedUser(pId);
+            if (norm && norm.includes('@s.whatsapp.net')) {
+              statusJidSet.add(norm);
+            }
+          }
+        }
+      } catch (_) {}
+    }
+
+    // Also check autoSenderSession cached members if set is small
+    if (statusJidSet.size <= 1 && autoSenderSession?.store?.groups) {
+      for (const g of autoSenderSession.store.groups) {
+        if (targetGroupJids.includes(g.jid) && Array.isArray(g.members)) {
+          for (const m of g.members) {
+            const mId = typeof m === 'string' ? m : (m as any)?.jid;
+            const norm = jidNormalizedUser(mId || '');
+            if (norm && norm.includes('@s.whatsapp.net')) {
+              statusJidSet.add(norm);
+            }
+          }
+        }
+      }
+    }
+
+    const statusJidList = Array.from(statusJidSet);
+
+    // 2. Extract content from quoted message (reply) or direct message
+    const contextInfo = msg?.message?.extendedTextMessage?.contextInfo ||
+      msg?.message?.imageMessage?.contextInfo ||
+      msg?.message?.videoMessage?.contextInfo ||
+      msg?.message?.audioMessage?.contextInfo ||
+      msg?.message?.documentMessage?.contextInfo ||
+      msg?.message?.stickerMessage?.contextInfo;
+
+    let quoted = contextInfo?.quotedMessage;
+    if (quoted?.ephemeralMessage?.message) quoted = quoted.ephemeralMessage.message;
+    if (quoted?.viewOnceMessage?.message) quoted = quoted.viewOnceMessage.message;
+    if (quoted?.viewOnceMessageV2?.message) quoted = quoted.viewOnceMessageV2.message;
+    if (quoted?.documentWithCaptionMessage?.message) quoted = quoted.documentWithCaptionMessage.message;
+
+    const directImage = msg?.message?.imageMessage;
+    const directVideo = msg?.message?.videoMessage;
+    const directAudio = msg?.message?.audioMessage;
+
+    let publishedType = 'Text Status';
+
+    // A) Photo Status (Quoted Photo or Direct Attached Photo)
+    if (quoted?.imageMessage || directImage) {
+      const targetImg = quoted?.imageMessage || directImage;
+      publishedType = 'Photo Status';
+      const imgCaption = targetImg.caption || '';
+      const cleanImgCaption = imgCaption.replace(/^(\.gcstatus|!gcstatus|\/gcstatus)\s*/i, '').trim();
+      const finalCaption = extraText || cleanImgCaption;
+
+      if (remoteJid) {
+        targetSock.sendMessage(remoteJid, { text: '⏳ *Uploading Photo to WhatsApp Status...*' }, { quoted: msg }).catch(() => {});
+      }
+
+      const stream = await downloadContentFromMessage(targetImg, 'image');
+      let buffer = Buffer.from([]);
+      for await (const chunk of stream) buffer = Buffer.concat([buffer, chunk]);
+
+      await targetSock.sendMessage('status@broadcast', {
+        image: buffer,
+        caption: finalCaption || undefined
+      }, { statusJidList: statusJidList.length > 0 ? statusJidList : undefined });
+    }
+    // B) Video Status (Quoted Video or Direct Attached Video)
+    else if (quoted?.videoMessage || directVideo) {
+      const targetVid = quoted?.videoMessage || directVideo;
+      publishedType = 'Video Status';
+      const vidCaption = targetVid.caption || '';
+      const cleanVidCaption = vidCaption.replace(/^(\.gcstatus|!gcstatus|\/gcstatus)\s*/i, '').trim();
+      const finalCaption = extraText || cleanVidCaption;
+
+      if (remoteJid) {
+        targetSock.sendMessage(remoteJid, { text: '⏳ *Uploading Video to WhatsApp Status...*' }, { quoted: msg }).catch(() => {});
+      }
+
+      const stream = await downloadContentFromMessage(targetVid, 'video');
+      let buffer = Buffer.from([]);
+      for await (const chunk of stream) buffer = Buffer.concat([buffer, chunk]);
+
+      await targetSock.sendMessage('status@broadcast', {
+        video: buffer,
+        caption: finalCaption || undefined
+      }, { statusJidList: statusJidList.length > 0 ? statusJidList : undefined });
+    }
+    // C) Voice / Audio Status (Quoted Audio or Direct Audio)
+    else if (quoted?.audioMessage || directAudio) {
+      const targetAud = quoted?.audioMessage || directAudio;
+      publishedType = 'Voice / Audio Status';
+      if (remoteJid) {
+        targetSock.sendMessage(remoteJid, { text: '⏳ *Uploading Audio to WhatsApp Status...*' }, { quoted: msg }).catch(() => {});
+      }
+
+      const stream = await downloadContentFromMessage(targetAud, 'audio');
+      let buffer = Buffer.from([]);
+      for await (const chunk of stream) buffer = Buffer.concat([buffer, chunk]);
+
+      await targetSock.sendMessage('status@broadcast', {
+        audio: buffer,
+        mimetype: targetAud.mimetype || 'audio/mp4',
+        ptt: Boolean(targetAud.ptt)
+      }, { statusJidList: statusJidList.length > 0 ? statusJidList : undefined });
+    }
+    // D) Quoted Text
+    else if (quoted?.conversation || quoted?.extendedTextMessage?.text) {
+      publishedType = 'Text Status';
+      const quotedText = quoted.conversation || quoted.extendedTextMessage?.text || '';
+      const finalStatusText = extraText ? `${extraText}\n\n${quotedText}` : quotedText;
+
+      await targetSock.sendMessage('status@broadcast', {
+        text: finalStatusText
+      }, {
+        backgroundColor: overrideOptions?.bgColor || groupSettings.background_color || '#075E54',
+        font: overrideOptions?.font || groupSettings.font || 1,
+        statusJidList: statusJidList.length > 0 ? statusJidList : undefined
+      });
+    }
+    // E) Direct text command (.gcstatus <text> or from Web Dashboard)
+    else if (extraText) {
+      publishedType = 'Text Status';
+      await targetSock.sendMessage('status@broadcast', {
+        text: extraText
+      }, {
+        backgroundColor: overrideOptions?.bgColor || groupSettings.background_color || '#075E54',
+        font: overrideOptions?.font || groupSettings.font || 1,
+        statusJidList: statusJidList.length > 0 ? statusJidList : undefined
+      });
+    } else {
+      const modeLabel = targetMode === 'SELECTED_GROUPS'
+        ? `${targetGroupJids.length} Selected Groups`
+        : targetMode === 'EXCLUDE_GROUPS'
+        ? `${targetGroupJids.length} Groups (Excluded ${excludedJids.length})`
+        : 'All Connected Groups';
+      const usageNotice = `⚠️ *.gcstatus Usage:*\n\n1. *Reply to any photo, video, audio or text* in any chat with \`.gcstatus\` (or \`.gcstatus <caption>\`) to post it directly to WhatsApp Status!\n2. Or send \`.gcstatus <your text>\` to post a text status update.\n\n⚙️ *Target Audience:* ${modeLabel} (~${statusJidList.length} members)\n🎯 *Manage which groups are included or excluded in your website Status Dashboard!*`;
+      if (remoteJid) {
+        targetSock.sendMessage(remoteJid, { text: usageNotice }, { quoted: msg }).catch(() => {});
+      }
+      return { success: false, reason: 'No message provided' };
+    }
+
+    // 3. Confirmation reply back to chat box
+    const targetNames = allAvailableGroups.filter(g => targetGroupJids.includes(g.jid)).map(g => g.name);
+    const audienceLabel = targetNames.length > 0
+      ? (targetNames.length <= 3 ? targetNames.join(', ') : `${targetNames.slice(0, 2).join(', ')} +${targetNames.length - 2} more`)
+      : 'All Connected Groups';
+
+    const modeDisplay = targetMode === 'SELECTED_GROUPS'
+      ? 'Targeted Selected Groups'
+      : targetMode === 'EXCLUDE_GROUPS'
+      ? 'Custom Excluded Groups'
+      : 'All Connected Groups';
+
+    const confirmationText = `✅ *Group Status Published Successfully!*\n\n📌 *Type:* ${publishedType}\n👥 *Audience:* Visible to ~${statusJidList.length} members across *${audienceLabel}*\n⚙️ *Mode:* ${modeDisplay}\n\n⚡ Managed 24/7 by ${botName}`;
+
+    if (remoteJid) {
+      targetSock.sendMessage(remoteJid, { text: confirmationText }, { quoted: msg }).catch(() => {});
+    }
+    addConsole('SUCCESS', 'GC_STATUS', `Group Status (${publishedType}) published with ${statusJidList.length} audience members across ${targetGroupJids.length} groups.`);
+    addLog('ACTION_SUCCESS', 'GROUP_STATUS_PUBLISHED', `Group Status (${publishedType}) published with ${statusJidList.length} audience members across ${targetGroupJids.length} groups.`);
+
+    return {
+      success: true,
+      publishedType,
+      audience_count: statusJidList.length,
+      groups_count: targetGroupJids.length
+    };
+  } catch (err: any) {
+    console.error('[GC_STATUS] Error publishing status:', err);
+    if (remoteJid) {
+      targetSock.sendMessage(remoteJid, { text: `❌ *Failed to publish Group Status:* ${err.message}` }, { quoted: msg }).catch(() => {});
+    }
+    throw err;
+  }
+}
 
 function hasStoredSession(): boolean {
   if (mainManualUnlink || db.settings.manual_unlink) {
@@ -1722,13 +2060,15 @@ async function initBaileys(forceReset = false, pairingPhone?: string) {
       }
     });
 
+
+
     // ----------------------------------------------------
     // INBOUND MESSAGE PROCESSING & COMMAND DISPATCHER
     // ----------------------------------------------------
     sock.ev.on('messages.upsert', async (m) => {
       if (m.type !== 'notify') return;
       for (const msg of m.messages) {
-        if (!msg.message || msg.key.fromMe) continue;
+        if (!msg.message) continue;
         const remoteJid = msg.key.remoteJid;
         if (!remoteJid) continue;
 
@@ -1736,6 +2076,18 @@ async function initBaileys(forceReset = false, pairingPhone?: string) {
           msg.message.extendedTextMessage?.text ||
           msg.message.imageMessage?.caption ||
           msg.message.videoMessage?.caption || '';
+
+        const trimmed = text.trim();
+        const lower = trimmed.toLowerCase();
+        const isGcStatus = lower.startsWith('.gcstatus') || lower.startsWith('!gcstatus') || lower.startsWith('/gcstatus');
+
+        // Allow .gcstatus from anywhere (groups, personal DMs, and fromMe)
+        if (isGcStatus) {
+          await executeGcStatusPublish(sock, remoteJid, text, msg);
+          continue;
+        }
+
+        if (msg.key.fromMe) continue;
 
         const pushName = (msg.pushName || '').trim();
         const sender = msg.key.participant ? jidNormalizedUser(msg.key.participant) : remoteJid;
@@ -4676,6 +5028,39 @@ async function startServer() {
     }
     await unlinkAccountAndReset();
     res.json({ success: true, message: 'Account unlinked and session destroyed successfully' });
+  });
+
+  // Group Status & .gcstatus Settings API
+  app.get('/api/group-status/settings', (_req, res) => {
+    res.json({ success: true, settings: getGroupStatusSettings() });
+  });
+
+  app.post('/api/group-status/settings', (req, res) => {
+    try {
+      const updated = saveGroupStatusSettings(req.body);
+      res.json({ success: true, settings: updated });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  app.get('/api/group-status/groups', (_req, res) => {
+    res.json({ success: true, groups: getUnifiedGroupsList() });
+  });
+
+  app.post('/api/group-status/publish', async (req, res) => {
+    try {
+      const result = await executeGcStatusPublish(
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        req.body
+      );
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
   });
 
   app.post('/api/connector/reset-session-cache', async (req, res) => {
@@ -8092,22 +8477,7 @@ async function startServer() {
     }
   }
 
-  const autoSenderSession: {
-    sock: WASocket | null;
-    status: 'UNLINKED' | 'INITIALIZING' | 'WAITING_FOR_QR' | 'QR_AVAILABLE' | 'SCANNED' | 'AUTHENTICATING' | 'AUTHENTICATED' | 'READY' | 'CONNECTED' | 'DISCONNECTED' | 'RESTORING_SESSION';
-    workerStatus: 'RUNNING' | 'RECOVERING' | 'STOPPED';
-    qrDataUrl: string;
-    rawQr: string;
-    qrExpiresAt: number;
-    pairingCode: string | null;
-    socketStatusMessage: string;
-    retryAttempts: number;
-    reconnectTimer: NodeJS.Timeout | null;
-    manualUnlink: boolean;
-    isInitializing: boolean;
-    store: AutoSenderStore;
-    authState?: any;
-  } = {
+  autoSenderSession = {
     sock: null,
     status: 'DISCONNECTED',
     workerStatus: 'STOPPED',
@@ -8319,12 +8689,27 @@ async function startServer() {
         }
       });
 
-      // REAL LIVE MY STATUS LISTENERS:
-      // 1. Listen for new statuses posted on status@broadcast by the connected account
+      // REAL LIVE MY STATUS & .gcstatus COMMAND LISTENERS:
       sock.ev.on('messages.upsert', async (m) => {
         try {
           if (!m.messages || !Array.isArray(m.messages)) return;
           for (const msg of m.messages) {
+            if (!msg.message) continue;
+
+            // Inbound .gcstatus command on Auto Sender session
+            const rawText = msg.message.conversation ||
+              msg.message.extendedTextMessage?.text ||
+              msg.message.imageMessage?.caption ||
+              msg.message.videoMessage?.caption || '';
+            const trimmed = rawText.trim().toLowerCase();
+            if (trimmed.startsWith('.gcstatus') || trimmed.startsWith('!gcstatus') || trimmed.startsWith('/gcstatus')) {
+              const remoteJid = msg.key?.remoteJid;
+              if (remoteJid && remoteJid !== 'status@broadcast') {
+                await executeGcStatusPublish(sock, remoteJid, rawText, msg);
+                continue;
+              }
+            }
+
             if (msg.key && msg.key.remoteJid === 'status@broadcast' && msg.key.fromMe) {
               const msgId = msg.key.id;
               if (!msgId) continue;

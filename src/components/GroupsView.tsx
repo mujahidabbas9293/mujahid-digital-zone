@@ -66,6 +66,65 @@ export const GroupsView: React.FC<GroupsViewProps> = ({
   const [groupToDelete, setGroupToDelete] = useState<Group | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Group Status Target Settings State
+  const [groupStatusSettings, setGroupStatusSettings] = useState<{
+    target_mode: 'ALL_GROUPS' | 'SELECTED_GROUPS' | 'EXCLUDE_GROUPS';
+    selected_group_jids: string[];
+    excluded_group_jids: string[];
+  }>({ target_mode: 'ALL_GROUPS', selected_group_jids: [], excluded_group_jids: [] });
+
+  useEffect(() => {
+    fetch('/api/group-status/settings')
+      .then(r => r.json())
+      .then(d => {
+        if (d && d.success && d.settings) {
+          setGroupStatusSettings(d.settings);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const isGroupStatusTargeted = (jid: string) => {
+    if (groupStatusSettings.target_mode === 'ALL_GROUPS') return true;
+    if (groupStatusSettings.target_mode === 'SELECTED_GROUPS') return groupStatusSettings.selected_group_jids.includes(jid);
+    if (groupStatusSettings.target_mode === 'EXCLUDE_GROUPS') return !groupStatusSettings.excluded_group_jids.includes(jid);
+    return true;
+  };
+
+  const handleToggleGroupStatusTarget = async (jid: string) => {
+    let mode = groupStatusSettings.target_mode;
+    let selected = [...groupStatusSettings.selected_group_jids];
+    let excluded = [...groupStatusSettings.excluded_group_jids];
+
+    if (mode === 'ALL_GROUPS') {
+      mode = 'SELECTED_GROUPS';
+      selected = [jid];
+    } else if (mode === 'SELECTED_GROUPS') {
+      if (selected.includes(jid)) {
+        selected = selected.filter(id => id !== jid);
+      } else {
+        selected.push(jid);
+      }
+    } else if (mode === 'EXCLUDE_GROUPS') {
+      if (excluded.includes(jid)) {
+        excluded = excluded.filter(id => id !== jid);
+      } else {
+        excluded.push(jid);
+      }
+    }
+
+    const updated = { target_mode: mode, selected_group_jids: selected, excluded_group_jids: excluded };
+    setGroupStatusSettings(updated);
+
+    try {
+      await fetch('/api/group-status/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated)
+      });
+    } catch (_) {}
+  };
+
   const isConnected = status?.status === 'CONNECTED';
   const isRecovering = status?.workerStatus === 'RECOVERING' || status?.status === 'CONNECTING';
   const isWorkerHealthy = status?.workerStatus === 'RUNNING';
@@ -293,6 +352,19 @@ export const GroupsView: React.FC<GroupsViewProps> = ({
 
                   {/* Group Defense & Activation Toggles */}
                   <div className="mt-4 pt-3 border-t border-slate-800 space-y-2 text-xs">
+                    <label className="flex items-center justify-between cursor-pointer">
+                      <div className="flex items-center gap-1.5 text-purple-300 font-medium">
+                        <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                        <span>Group Status (.gcstatus Target)</span>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={isGroupStatusTargeted(g.jid)}
+                        onChange={() => handleToggleGroupStatusTarget(g.jid)}
+                        className="rounded accent-purple-500 w-4 h-4 cursor-pointer"
+                      />
+                    </label>
+
                     <label className="flex items-center justify-between cursor-pointer">
                       <div className="flex items-center gap-1.5 text-slate-200 font-medium">
                         <Power className={`w-3.5 h-3.5 ${g.is_active ? 'text-emerald-400' : 'text-slate-500'}`} />

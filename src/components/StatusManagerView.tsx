@@ -52,9 +52,20 @@ export const StatusManagerView: React.FC<StatusManagerViewProps> = ({
   const [statusNotifications, setStatusNotifications] = useState<AutoSenderTask[]>([]);
   const [realGroups, setRealGroups] = useState<CenterGroup[]>([]);
   const [refreshing, setRefreshing] = useState<boolean>(false);
-  const [statusNotifSubTab, setStatusNotifSubTab] = useState<'saved' | 'new'>('saved');
+  const [statusNotifSubTab, setStatusNotifSubTab] = useState<'saved' | 'new' | 'group-status'>('saved');
   const [statusNotifFeedback, setStatusNotifFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [currentTime, setCurrentTime] = useState<number>(Date.now());
+
+  // Group Status & .gcstatus state
+  const [groupStatusTargetMode, setGroupStatusTargetMode] = useState<'ALL_GROUPS' | 'SELECTED_GROUPS' | 'EXCLUDE_GROUPS'>('ALL_GROUPS');
+  const [groupStatusSelectedJids, setGroupStatusSelectedJids] = useState<string[]>([]);
+  const [groupStatusExcludedJids, setGroupStatusExcludedJids] = useState<string[]>([]);
+  const [groupStatusSearch, setGroupStatusSearch] = useState<string>('');
+  const [groupStatusBgColor, setGroupStatusBgColor] = useState<string>('#075E54');
+  const [groupStatusPublishText, setGroupStatusPublishText] = useState<string>('');
+  const [groupStatusSaving, setGroupStatusSaving] = useState<boolean>(false);
+  const [groupStatusPublishing, setGroupStatusPublishing] = useState<boolean>(false);
+  const [groupStatusFeedback, setGroupStatusFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Form State
   const [editingStatusNotifId, setEditingStatusNotifId] = useState<string | null>(null);
@@ -127,8 +138,24 @@ export const StatusManagerView: React.FC<StatusManagerViewProps> = ({
     }
   };
 
+  const fetchGroupStatusSettings = async () => {
+    try {
+      const res = await fetch('/api/group-status/settings');
+      const data = await res.json();
+      if (data && data.success && data.settings) {
+        setGroupStatusTargetMode(data.settings.target_mode || 'ALL_GROUPS');
+        setGroupStatusSelectedJids(data.settings.selected_group_jids || []);
+        setGroupStatusExcludedJids(data.settings.excluded_group_jids || []);
+        setGroupStatusBgColor(data.settings.background_color || '#075E54');
+      }
+    } catch (e) {
+      console.error('[GROUP_STATUS] Error loading settings:', e);
+    }
+  };
+
   useEffect(() => {
     fetchStatusNotifications();
+    fetchGroupStatusSettings();
     const interval = setInterval(fetchStatusNotifications, 3500);
     const timeInterval = setInterval(() => setCurrentTime(Date.now()), 10000);
     return () => {
@@ -136,6 +163,73 @@ export const StatusManagerView: React.FC<StatusManagerViewProps> = ({
       clearInterval(timeInterval);
     };
   }, []);
+
+  const handleSaveGroupStatusSettings = async (
+    overrideMode?: 'ALL_GROUPS' | 'SELECTED_GROUPS' | 'EXCLUDE_GROUPS',
+    overrideSelected?: string[],
+    overrideExcluded?: string[]
+  ) => {
+    setGroupStatusSaving(true);
+    setGroupStatusFeedback(null);
+    const modeToSave = overrideMode || groupStatusTargetMode;
+    const selectedToSave = overrideSelected !== undefined ? overrideSelected : groupStatusSelectedJids;
+    const excludedToSave = overrideExcluded !== undefined ? overrideExcluded : groupStatusExcludedJids;
+
+    try {
+      const res = await fetch('/api/group-status/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          target_mode: modeToSave,
+          selected_group_jids: selectedToSave,
+          excluded_group_jids: excludedToSave,
+          background_color: groupStatusBgColor
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setGroupStatusFeedback({ type: 'success', text: 'Group Status target settings updated & saved successfully!' });
+      } else {
+        setGroupStatusFeedback({ type: 'error', text: data.error || 'Failed to save settings' });
+      }
+    } catch (err: any) {
+      setGroupStatusFeedback({ type: 'error', text: 'Save error: ' + err.message });
+    } finally {
+      setGroupStatusSaving(false);
+    }
+  };
+
+  const handlePublishWebGroupStatus = async () => {
+    if (!groupStatusPublishText.trim()) return;
+    setGroupStatusPublishing(true);
+    setGroupStatusFeedback(null);
+    try {
+      const res = await fetch('/api/group-status/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customText: groupStatusPublishText,
+          bgColor: groupStatusBgColor,
+          targetMode: groupStatusTargetMode,
+          selectedGroupJids: groupStatusSelectedJids
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setGroupStatusFeedback({
+          type: 'success',
+          text: `Group Status published! Reached ~${data.audience_count} members across ${data.groups_count} groups.`
+        });
+        setGroupStatusPublishText('');
+      } else {
+        setGroupStatusFeedback({ type: 'error', text: data.error || 'Failed to publish Group Status' });
+      }
+    } catch (err: any) {
+      setGroupStatusFeedback({ type: 'error', text: 'Publish error: ' + err.message });
+    } finally {
+      setGroupStatusPublishing(false);
+    }
+  };
 
   const effectiveGroups = useMemo(() => {
     if (realGroups.length > 0) return realGroups;
@@ -661,6 +755,18 @@ export const StatusManagerView: React.FC<StatusManagerViewProps> = ({
             </button>
             <button
               type="button"
+              onClick={() => setStatusNotifSubTab('group-status')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                statusNotifSubTab === 'group-status'
+                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-purple-300" />
+              Group Status &amp; .gcstatus Settings
+            </button>
+            <button
+              type="button"
               onClick={handleOpenNewStatusNotifForm}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
                 statusNotifSubTab === 'new'
@@ -770,6 +876,373 @@ export const StatusManagerView: React.FC<StatusManagerViewProps> = ({
             <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />
           )}
           <span>{statusNotifFeedback.text}</span>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* SUB-TAB: GROUP STATUS & .gcstatus CONTROL PANEL */}
+      {/* ======================================================== */}
+      {statusNotifSubTab === 'group-status' && (
+        <div className="space-y-6">
+          {/* Target Audience Mode Selection Card */}
+          <div className="bg-slate-900 border border-purple-500/30 rounded-3xl p-6 shadow-2xl space-y-6 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+              <div>
+                <div className="flex items-center gap-2.5">
+                  <Sparkles className="w-6 h-6 text-purple-400" />
+                  <h2 className="text-xl font-black text-white">Group Status &amp; .gcstatus Bot Settings</h2>
+                  <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                    Live WhatsApp Engine
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 mt-1">
+                  Configure which WhatsApp groups get targeted when you use <code className="text-purple-300 font-mono bg-purple-950/60 px-1.5 py-0.5 rounded border border-purple-500/30">.gcstatus</code> in WhatsApp chats or publish from this dashboard.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handleSaveGroupStatusSettings()}
+                disabled={groupStatusSaving}
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs shadow-lg transition-all flex items-center gap-2 disabled:opacity-50"
+              >
+                <Save className="w-4 h-4" />
+                {groupStatusSaving ? 'Saving Settings...' : 'Save Settings'}
+              </button>
+            </div>
+
+            {/* Feedback Message */}
+            {groupStatusFeedback && (
+              <div className={`p-4 rounded-2xl text-xs font-bold border flex items-center gap-2.5 ${
+                groupStatusFeedback.type === 'success'
+                  ? 'bg-purple-950/70 border-purple-500/50 text-purple-200'
+                  : 'bg-rose-950/70 border-rose-500/50 text-rose-300'
+              }`}>
+                {groupStatusFeedback.type === 'success' ? (
+                  <CheckCircle2 className="w-5 h-5 text-purple-400 shrink-0" />
+                ) : (
+                  <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />
+                )}
+                <span>{groupStatusFeedback.text}</span>
+              </div>
+            )}
+
+            {/* Target Mode Selector Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Mode 1: All Groups */}
+              <div
+                onClick={() => {
+                  setGroupStatusTargetMode('ALL_GROUPS');
+                  handleSaveGroupStatusSettings('ALL_GROUPS');
+                }}
+                className={`cursor-pointer p-5 rounded-2xl border transition-all space-y-2 relative ${
+                  groupStatusTargetMode === 'ALL_GROUPS'
+                    ? 'bg-gradient-to-b from-purple-950/60 to-slate-900 border-purple-500 shadow-xl ring-2 ring-purple-500/30'
+                    : 'bg-slate-950/60 border-slate-800 hover:border-slate-700'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 font-bold">
+                    🌐
+                  </div>
+                  {groupStatusTargetMode === 'ALL_GROUPS' && (
+                    <span className="w-6 h-6 rounded-full bg-purple-500 text-white flex items-center justify-center text-xs font-black shadow-md">
+                      ✓
+                    </span>
+                  )}
+                </div>
+                <h3 className="font-bold text-sm text-white">All Connected Groups</h3>
+                <p className="text-xs text-slate-400">
+                  Group status updates reach members across all connected WhatsApp groups ({effectiveGroups.length} groups).
+                </p>
+              </div>
+
+              {/* Mode 2: Selected Groups Only */}
+              <div
+                onClick={() => {
+                  setGroupStatusTargetMode('SELECTED_GROUPS');
+                  handleSaveGroupStatusSettings('SELECTED_GROUPS');
+                }}
+                className={`cursor-pointer p-5 rounded-2xl border transition-all space-y-2 relative ${
+                  groupStatusTargetMode === 'SELECTED_GROUPS'
+                    ? 'bg-gradient-to-b from-purple-950/60 to-slate-900 border-purple-500 shadow-xl ring-2 ring-purple-500/30'
+                    : 'bg-slate-950/60 border-slate-800 hover:border-slate-700'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 font-bold">
+                    🎯
+                  </div>
+                  {groupStatusTargetMode === 'SELECTED_GROUPS' && (
+                    <span className="w-6 h-6 rounded-full bg-purple-500 text-white flex items-center justify-center text-xs font-black shadow-md">
+                      ✓
+                    </span>
+                  )}
+                </div>
+                <h3 className="font-bold text-sm text-white">Target Selected Groups Only</h3>
+                <p className="text-xs text-slate-400">
+                  Select 1 specific group or multiple specific groups to receive status updates ({groupStatusSelectedJids.length} selected).
+                </p>
+              </div>
+
+              {/* Mode 3: Exclude Specific Groups */}
+              <div
+                onClick={() => {
+                  setGroupStatusTargetMode('EXCLUDE_GROUPS');
+                  handleSaveGroupStatusSettings('EXCLUDE_GROUPS');
+                }}
+                className={`cursor-pointer p-5 rounded-2xl border transition-all space-y-2 relative ${
+                  groupStatusTargetMode === 'EXCLUDE_GROUPS'
+                    ? 'bg-gradient-to-b from-purple-950/60 to-slate-900 border-purple-500 shadow-xl ring-2 ring-purple-500/30'
+                    : 'bg-slate-950/60 border-slate-800 hover:border-slate-700'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400 font-bold">
+                    🚫
+                  </div>
+                  {groupStatusTargetMode === 'EXCLUDE_GROUPS' && (
+                    <span className="w-6 h-6 rounded-full bg-purple-500 text-white flex items-center justify-center text-xs font-black shadow-md">
+                      ✓
+                    </span>
+                  )}
+                </div>
+                <h3 className="font-bold text-sm text-white">Exclude Selected Groups</h3>
+                <p className="text-xs text-slate-400">
+                  Status reaches all groups EXCEPT those you explicitly add to the excluded list ({groupStatusExcludedJids.length} excluded).
+                </p>
+              </div>
+            </div>
+
+            {/* Interactive Group Selection Grid */}
+            {(groupStatusTargetMode === 'SELECTED_GROUPS' || groupStatusTargetMode === 'EXCLUDE_GROUPS') && (
+              <div className="space-y-4 pt-4 border-t border-slate-800">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div>
+                    <h4 className="font-bold text-sm text-white flex items-center gap-2">
+                      <Users className="w-4 h-4 text-purple-400" />
+                      {groupStatusTargetMode === 'SELECTED_GROUPS'
+                        ? `Select Groups for Group Status (${groupStatusSelectedJids.length} Selected)`
+                        : `Select Groups to Exclude (${groupStatusExcludedJids.length} Excluded)`}
+                    </h4>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Toggle group checkboxes below to customize status targeting.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="relative">
+                      <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        placeholder="Search groups..."
+                        value={groupStatusSearch}
+                        onChange={(e) => setGroupStatusSearch(e.target.value)}
+                        className="pl-8 pr-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-purple-500 w-44"
+                      />
+                    </div>
+
+                    {groupStatusTargetMode === 'SELECTED_GROUPS' ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const allJids = effectiveGroups.map(g => g.jid);
+                            setGroupStatusSelectedJids(allJids);
+                            handleSaveGroupStatusSettings('SELECTED_GROUPS', allJids);
+                          }}
+                          className="px-3 py-1.5 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 rounded-xl text-xs font-bold border border-purple-500/30 transition-all"
+                        >
+                          Select All
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setGroupStatusSelectedJids([]);
+                            handleSaveGroupStatusSettings('SELECTED_GROUPS', []);
+                          }}
+                          className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-all"
+                        >
+                          Deselect All
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setGroupStatusExcludedJids([]);
+                          handleSaveGroupStatusSettings('EXCLUDE_GROUPS', undefined, []);
+                        }}
+                        className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-all"
+                      >
+                        Clear Exclusions
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 max-h-80 overflow-y-auto pr-1 scrollbar-thin">
+                  {effectiveGroups
+                    .filter(g => !groupStatusSearch.trim() || g.name.toLowerCase().includes(groupStatusSearch.toLowerCase()) || g.jid.includes(groupStatusSearch.toLowerCase()))
+                    .map((g) => {
+                      const isSelected = groupStatusSelectedJids.includes(g.jid);
+                      const isExcluded = groupStatusExcludedJids.includes(g.jid);
+                      const isChecked = groupStatusTargetMode === 'SELECTED_GROUPS' ? isSelected : isExcluded;
+
+                      return (
+                        <div
+                          key={g.jid}
+                          onClick={() => {
+                            if (groupStatusTargetMode === 'SELECTED_GROUPS') {
+                              const next = isSelected
+                                ? groupStatusSelectedJids.filter(id => id !== g.jid)
+                                : [...groupStatusSelectedJids, g.jid];
+                              setGroupStatusSelectedJids(next);
+                              handleSaveGroupStatusSettings('SELECTED_GROUPS', next);
+                            } else {
+                              const next = isExcluded
+                                ? groupStatusExcludedJids.filter(id => id !== g.jid)
+                                : [...groupStatusExcludedJids, g.jid];
+                              setGroupStatusExcludedJids(next);
+                              handleSaveGroupStatusSettings('EXCLUDE_GROUPS', undefined, next);
+                            }
+                          }}
+                          className={`cursor-pointer p-3 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
+                            isChecked
+                              ? (groupStatusTargetMode === 'SELECTED_GROUPS'
+                                  ? 'bg-purple-950/40 border-purple-500/70 text-white'
+                                  : 'bg-rose-950/40 border-rose-500/70 text-white')
+                              : 'bg-slate-950/60 border-slate-800/80 hover:border-slate-700 text-slate-300'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 overflow-hidden">
+                            <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center shrink-0 text-xs font-bold overflow-hidden border border-slate-700">
+                              {g.icon_url ? (
+                                <img src={g.icon_url} alt={g.name} className="w-full h-full object-cover" />
+                              ) : (
+                                g.name.charAt(0).toUpperCase()
+                              )}
+                            </div>
+                            <div className="truncate">
+                              <h5 className="font-bold text-xs truncate text-white">{g.name}</h5>
+                              <span className="text-[10px] text-slate-400 font-mono">
+                                {g.member_count} members
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className={`w-5 h-5 rounded-lg border flex items-center justify-center shrink-0 transition-all ${
+                            isChecked
+                              ? (groupStatusTargetMode === 'SELECTED_GROUPS'
+                                  ? 'bg-purple-500 border-purple-400 text-white'
+                                  : 'bg-rose-500 border-rose-400 text-white')
+                              : 'border-slate-700 bg-slate-900'
+                          }`}>
+                            {isChecked && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Quick Web Publisher & Command Helper Cards */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Quick Status Creator from Web Dashboard */}
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
+              <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
+                <Send className="w-5 h-5 text-purple-400" />
+                <h3 className="font-bold text-base text-white">Publish Status Directly from Website</h3>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                    Status Message Text
+                  </label>
+                  <textarea
+                    rows={3}
+                    placeholder="Enter status update text to publish to WhatsApp Status..."
+                    value={groupStatusPublishText}
+                    onChange={(e) => setGroupStatusPublishText(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-1">
+                      Background Color
+                    </label>
+                    <div className="flex items-center gap-1.5">
+                      {['#075E54', '#128C7E', '#072419', '#1F2937', '#7C3AED', '#C026D3', '#DC2626', '#D97706'].map(color => (
+                        <button
+                          key={color}
+                          type="button"
+                          onClick={() => setGroupStatusBgColor(color)}
+                          style={{ backgroundColor: color }}
+                          className={`w-6 h-6 rounded-full transition-transform ${
+                            groupStatusBgColor === color ? 'scale-125 ring-2 ring-white shadow-md' : 'hover:scale-110'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handlePublishWebGroupStatus}
+                    disabled={groupStatusPublishing || !groupStatusPublishText.trim()}
+                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs shadow-lg transition-all flex items-center gap-2 disabled:opacity-50"
+                  >
+                    <Sparkles className="w-4 h-4 text-purple-200" />
+                    {groupStatusPublishing ? 'Publishing...' : 'Publish Status Now'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* WhatsApp Bot Instructions Card */}
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
+              <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
+                <MessageSquare className="w-5 h-5 text-indigo-400" />
+                <h3 className="font-bold text-base text-white">WhatsApp Bot .gcstatus Commands</h3>
+              </div>
+
+              <div className="space-y-3 text-xs text-slate-300">
+                <div className="p-3 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-1">
+                  <div className="font-bold text-purple-300 flex items-center gap-1.5">
+                    <span>1️⃣</span> Reply to Any Message in Any Chat Box
+                  </div>
+                  <p className="text-slate-400">
+                    Reply to any Photo, Video, Audio Voice Note, or Text in any group or DM with <code className="text-purple-300 bg-purple-950/60 px-1 py-0.5 rounded font-mono">.gcstatus</code> to publish it directly to WhatsApp Status!
+                  </p>
+                </div>
+
+                <div className="p-3 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-1">
+                  <div className="font-bold text-indigo-300 flex items-center gap-1.5">
+                    <span>2️⃣</span> Direct Text Command
+                  </div>
+                  <p className="text-slate-400">
+                    Send <code className="text-indigo-300 bg-indigo-950/60 px-1 py-0.5 rounded font-mono">.gcstatus Hello Everyone</code> in any chat box to post text status.
+                  </p>
+                </div>
+
+                <div className="p-3 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-1">
+                  <div className="font-bold text-emerald-300 flex items-center gap-1.5">
+                    <span>3️⃣</span> Direct Media Attachment
+                  </div>
+                  <p className="text-slate-400">
+                    Select a photo or video in WhatsApp and write caption <code className="text-emerald-300 bg-emerald-950/60 px-1 py-0.5 rounded font-mono">.gcstatus</code> before sending.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

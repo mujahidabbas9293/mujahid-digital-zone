@@ -6,6 +6,15 @@ export interface StatusTaskGroupResult {
   sent_at?: string;
 }
 
+export interface GroupStatusSettings {
+  enabled: boolean;
+  target_mode: 'ALL_GROUPS' | 'SELECTED_GROUPS' | 'EXCLUDE_GROUPS';
+  selected_group_jids: string[];
+  excluded_group_jids: string[];
+  background_color?: string;
+  font?: number;
+}
+
 export interface StatusTask {
   id: string;
   media_url?: string;
